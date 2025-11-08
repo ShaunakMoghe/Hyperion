@@ -1,6 +1,6 @@
-from app.models.audit_log import AuditLog
-from app.models.membership import Membership
-from app.models.organization import Organization
-from app.models.user import User
+from sqlalchemy.orm import DeclarativeBase
 
-__all__ = ["User", "Organization", "Membership", "AuditLog"]
+class Base(DeclarativeBase):
+    pass
+
+from .run import Run

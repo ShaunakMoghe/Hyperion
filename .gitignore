@@ -1,27 +1,37 @@
-# Python
+# --- Python build/bytecode
 __pycache__/
 *.py[cod]
 *.pyo
+*.egg-info/
+.eggs/
+
+# --- Virtual envs
 .venv/
 venv/
-.env
-.env.*
+env/
+backend/.venv/
 
-# Node
-node_modules/
-dist/
-build/
-.next/
-out/
-
-# Editor
+# --- OS junk
 .DS_Store
-.idea/
+Thumbs.db
+
+# --- Tool caches
+.pytest_cache/
+.mypy_cache/
+.coverage*
+htmlcov/
+
+# --- Editors/IDE
 .vscode/
+.idea/
 
-# Docker
-*.pid
-logs/
+# --- Project-specific
+dev.db
+server.log
+server.err
+payload.json
 
-# Others
-*.log
+# --- Secrets
+.env
+*.env
+.env.*.local

@@ -1,21 +1,25 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.api import api_router
+import pathlib
 
-from app.api.routes import audit, health, orgs
-from app.core.config import get_settings
+logging.basicConfig(level=logging.INFO)
+logging.info("MAIN LOADED FROM: %s", pathlib.Path(__file__).resolve())
 
-settings = get_settings()
+app = FastAPI(title="Hyperion")
 
-app = FastAPI(title=settings.app_name)
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(health.router)
-app.include_router(orgs.router)
-app.include_router(audit.router)
+app.include_router(api_router, prefix="/api/v1")

@@ -1,13 +1,32 @@
 from fastapi import APIRouter
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
-from app.core.config import get_settings
+from app.db.session import SessionLocal
 
-router = APIRouter(tags=["health"])
+router = APIRouter()
 
 
-@router.get("/healthz", summary="Liveness probe")
-def healthz() -> dict[str, str]:
-    """Return a simple health status payload."""
+async def get_db() -> AsyncSession:
+    async with SessionLocal() as session:
+        yield session
 
-    settings = get_settings()
-    return {"status": "ok", "app": settings.app_name, "environment": settings.environment}
+
+@router.get("")
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """
+    Health check endpoint.
+    """
+    db_status = "ok"
+    db_error = None
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = "error"
+        db_error = str(e)
+
+    if db_status == "ok":
+        return {"status": "ok", "database": db_status}
+    else:
+        return {"status": "error", "database": db_status, "detail": db_error}
