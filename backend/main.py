@@ -4,9 +4,24 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 import uuid
 import asyncio
+import asyncio
 from temporalio.client import Client
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="State-as-a-Service Agent Intercept Proxy")
+from contextlib import asynccontextmanager
+
+from graph_db import graph_db
+from agent_contract import validate_action_against_contract
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await graph_db.connect()
+    yield
+    # Shutdown
+    await graph_db.close()
+
+app = FastAPI(title="State-as-a-Service Agent Intercept Proxy", lifespan=lifespan)
 
 # Allow Next.js dashboard to interact
 app.add_middleware(
@@ -65,16 +80,30 @@ async def mcp_intercept_middleware(request: Request, call_next):
          body = await request.body()
     
     # State capture mapping
+    parent_trace_id = request.headers.get("x-parent-trace-id")
     trace = {
         "trace_id": trace_id,
         "path": request.url.path,
         "method": request.method,
         "request_body": body.decode('utf-8') if body else None,
         "timestamp": start_time,
-        "status": "pending_execution"
+        "status": "pending_execution",
+        "parent_trace_id": parent_trace_id
     }
     execution_traces.append(trace)
-    print(f"[INTERCEPT] Captured state for {request.method} {request.url.path} (Trace: {trace_id})")
+    print(f"[INTERCEPT] Captured state for {request.method} {request.url.path} (Trace: {trace_id}) [Parent: {parent_trace_id}]")
+
+    # Write to Neo4j Graph Database
+    asyncio.create_task(
+        graph_db.record_agent_intent(
+            trace_id=trace_id,
+            method=request.method,
+            path=request.url.path,
+            request_body=trace["request_body"] or "",
+            status="pending_execution",
+            parent_trace_id=parent_trace_id
+        )
+    )
 
     # 2. Proceed with actual downstream execution
     response = await call_next(request)
@@ -94,6 +123,9 @@ async def mcp_intercept_middleware(request: Request, call_next):
     else:
         trace["status"] = "success"
 
+    # Attach trace ID to the response so the agent can chain causal actions
+    response.headers["x-trace-id"] = trace_id
+
     return response
 
 @app.get("/api/agent/status")
@@ -102,10 +134,8 @@ async def get_agent_status():
 
 @app.post("/api/agent/action")
 async def execute_agent_action(action: dict):
-    # Mocking downstream agent framework (LangChain/AutoGen) processing an action
-    if action.get("type") == "DANGEROUS_ACTION":
-        from fastapi import HTTPException
-        raise HTTPException(status_code=403, detail="Action blocked by Agent Contract limit.")
+    # Enforce YAML Bounded Agent Contract Limits
+    validate_action_against_contract(action)
     
     return {"result": f"Action executed.", "details": action}
 

@@ -4,6 +4,8 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from graph_db import graph_db
+
 # ---------------------------------------------------------
 # ACTIVITIES
 # ---------------------------------------------------------
@@ -18,6 +20,11 @@ async def execute_compensating_transaction(trace_id: str) -> str:
     
     # In a real system, this would lookup the trace, extract the original request,
     # and map it to the inverse operation (e.g. DELETE if the original was POST).
+    
+    # Phase 2 Graph DB: Find any downstream dependent actions
+    dependent_traces = await graph_db.find_dependent_traces(trace_id)
+    if dependent_traces:
+        print(f"[ROLLBACK ENGINE] Cascading rollback required for {len(dependent_traces)} downstream traces: {dependent_traces}")
     
     print(f"[ROLLBACK ENGINE] ✅ Rollback Complete for Trace: {trace_id}")
     return f"Rolled back trace {trace_id} successfully."
@@ -57,6 +64,9 @@ class AgentRollbackWorkflow:
 # WORKER / MAIN
 # ---------------------------------------------------------
 async def main():
+    # Phase 2: Connect worker to Graph DB
+    await graph_db.connect()
+
     # Connect to the local Temporal server (requires Temporal to be running)
     try:
         client = await Client.connect("localhost:7233")

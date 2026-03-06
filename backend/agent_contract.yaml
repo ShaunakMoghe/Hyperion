@@ -1,0 +1,23 @@
+name: "Sales_Agent_A"
+version: "1.0"
+description: "AI Agent tasked with reading CRM data and drafting emails."
+
+permissions:
+  allowed_endpoints:
+    - "/api/agent/action"
+  
+  allowed_actions:
+    - action_type: "READ_CRM"
+      max_calls_per_minute: 10
+    
+    - action_type: "WRITE_DOC"
+      max_calls_per_minute: 5
+
+  # Explicitly forbidden actions that immediately trigger the Kill Switch
+  forbidden_actions:
+    - action_type: "DANGEROUS_ACTION"
+    - action_type: "DELETE_CRM"
+    - action_type: "SEND_EMAIL_UNAPPROVED"
+
+budget:
+  max_spend_usd: 5.00
