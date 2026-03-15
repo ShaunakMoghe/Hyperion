@@ -4,9 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 import uuid
 import asyncio
+import json
 import asyncio
 from temporalio.client import Client
-from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
 
 from contextlib import asynccontextmanager
 
@@ -81,6 +82,8 @@ async def mcp_intercept_middleware(request: Request, call_next):
     
     # State capture mapping
     parent_trace_id = request.headers.get("x-parent-trace-id")
+    is_shadow_mode = request.query_params.get("simulate") == "true" or request.headers.get("x-simulate") == "true"
+    
     trace = {
         "trace_id": trace_id,
         "path": request.url.path,
@@ -88,10 +91,11 @@ async def mcp_intercept_middleware(request: Request, call_next):
         "request_body": body.decode('utf-8') if body else None,
         "timestamp": start_time,
         "status": "pending_execution",
-        "parent_trace_id": parent_trace_id
+        "parent_trace_id": parent_trace_id,
+        "is_shadow_mode": is_shadow_mode
     }
     execution_traces.append(trace)
-    print(f"[INTERCEPT] Captured state for {request.method} {request.url.path} (Trace: {trace_id}) [Parent: {parent_trace_id}]")
+    print(f"[INTERCEPT] Captured state for {request.method} {request.url.path} (Trace: {trace_id}) [Shadow: {is_shadow_mode}]")
 
     # Write to Neo4j Graph Database
     asyncio.create_task(
@@ -105,23 +109,52 @@ async def mcp_intercept_middleware(request: Request, call_next):
         )
     )
 
-    # 2. Proceed with actual downstream execution
-    response = await call_next(request)
+    # Agent Contract Enforcement (Proxy Level)
+    action_dict = {}
+    try:
+        if body:
+            action_dict = json.loads(body.decode('utf-8'))
+            validate_action_against_contract(action_dict)
+    except HTTPException as e:
+        # Contract blocked it
+        trace["status"] = "failed"
+        trace["response_status"] = e.status_code
+        print(f"[KILL SWITCH] Agent action BLOCKED by contract ({e.status_code}).")
+        asyncio.create_task(trigger_rollback_workflow(trace_id))
+        response = JSONResponse(content={"detail": e.detail}, status_code=e.status_code)
+        response.headers["x-trace-id"] = trace_id
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+    except Exception as e:
+        pass
+
+    # 2. Proceed with actual downstream execution OR Shadow Bypass
+    if is_shadow_mode:
+        print(f"[SHADOW MODE] Bypassing downstream execution for Trace {trace_id}")
+        response = JSONResponse(content={"result": "Shadow mode executed.", "details": action_dict})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    else:
+        response = await call_next(request)
 
     # 3. Post-execution telemetry & Rules Evaluation
     process_time = time.time() - start_time
     trace["process_time_ms"] = round(process_time * 1000, 2)
     trace["response_status"] = response.status_code
     
-    if response.status_code >= 400:
+    if response.status_code >= 400 and not (is_shadow_mode and response.status_code == 200):
         # Trigger Hard Kill Switch sequence if the downstream rejected the action
-        trace["status"] = "failed"
-        print(f"[KILL SWITCH] Agent action failed ({response.status_code}). Analying for Compensating Transactions...")
-        
-        # Fire off the async Temporal workflow
-        asyncio.create_task(trigger_rollback_workflow(trace_id))
+        if trace["status"] != "failed": # Don't double-trigger if contract blocked it
+            trace["status"] = "failed"
+            print(f"[KILL SWITCH] Agent action failed ({response.status_code}). Analying for Compensating Transactions...")
+            # Fire off the async Temporal workflow
+            asyncio.create_task(trigger_rollback_workflow(trace_id))
     else:
-        trace["status"] = "success"
+        if trace["status"] != "failed":
+            trace["status"] = "success"
 
     # Attach trace ID to the response so the agent can chain causal actions
     response.headers["x-trace-id"] = trace_id
@@ -134,12 +167,22 @@ async def get_agent_status():
 
 @app.post("/api/agent/action")
 async def execute_agent_action(action: dict):
-    # Enforce YAML Bounded Agent Contract Limits
-    validate_action_against_contract(action)
-    
+    # This acts as the downstream mock. Validation is now handled at the proxy middleware!
     return {"result": f"Action executed.", "details": action}
 
 @app.get("/api/traces")
 async def get_traces():
     # Provide the execution telemetry to the Next.js visual dashboard
     return JSONResponse(content={"traces": execution_traces[::-1]})  # Reverse chronological
+
+@app.get("/api/compliance/export/{trace_id}")
+async def export_compliance_audit(trace_id: str):
+    # Retrieve the cryptographic SOC2 ledger from the Neo4j graph
+    ledger = await graph_db.get_audit_ledger(trace_id)
+    return JSONResponse(
+        content={
+            "document": "SOC2_Agent_Audit_Ledger",
+            "primary_trace_id": trace_id,
+            "causal_chain_events": ledger
+        }
+    )

@@ -1,9 +1,11 @@
 import yaml
+import os
 from fastapi import HTTPException
 
 def load_contract():
     try:
-        with open("agent_contract.yaml", "r") as f:
+        contract_path = os.path.join(os.path.dirname(__file__), "agent_contract.yaml")
+        with open(contract_path, "r") as f:
             return yaml.safe_load(f)
     except Exception as e:
         print(f"[CONTRACT] Failed to load agent_contract.yaml: {e}")

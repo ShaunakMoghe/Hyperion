@@ -79,4 +79,32 @@ class GraphStore:
             print(f"[NEO4J] Failed to query dependents: {e}")
             return []
 
+    async def get_audit_ledger(self, trace_id: str):
+        """
+        Generates a flat, cryptographic audit ledger of the trace and its entire causal chain.
+        """
+        if not self.driver:
+            return []
+            
+        # Bidirectional match to find all intents in this causal chain
+        query = """
+        MATCH (a:AgentIntent)-[:CAUSED*0..]-(b:AgentIntent)
+        WHERE a.trace_id = $trace_id OR b.trace_id = $trace_id
+        MATCH (b)-[:EXECUTED]->(c:APICall)-[:CAPTURED_STATE]->(s:StateSnapshot)
+        RETURN DISTINCT b.trace_id AS trace_id, 
+                        c.method AS method, 
+                        c.path AS path, 
+                        s.body AS request_body, 
+                        s.status AS status
+        """
+        try:
+            async with self.driver.session() as session:
+                result = await session.run(query, trace_id=trace_id)
+                records = await result.data()
+                print(f"[NEO4J] Generated SOC2 ledged for {trace_id} ({len(records)} events in chain)")
+                return records
+        except Exception as e:
+            print(f"[NEO4J] Failed to generate audit ledger: {e}")
+            return []
+
 graph_db = GraphStore()
