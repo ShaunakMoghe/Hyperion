@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from graph_db import graph_db
 from agent_contract import validate_action_against_contract
+from real_agent import run_agent_query
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -169,6 +170,12 @@ async def get_agent_status():
 async def execute_agent_action(action: dict):
     # This acts as the downstream mock. Validation is now handled at the proxy middleware!
     return {"result": f"Action executed.", "details": action}
+
+@app.post("/api/chat")
+async def chat_with_agent(request: dict):
+    prompt = request.get("prompt", "")
+    response = await run_agent_query(prompt)
+    return {"reply": response}
 
 @app.get("/api/traces")
 async def get_traces():

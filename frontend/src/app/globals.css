@@ -1,20 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface-panel: #0a0a0a;
+  --surface-card: #111111;
+  --surface-hover: #171717;
+  --border-subtle: #1F1F1F;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-slate-900: var(--surface-panel);
+  --color-slate-950: var(--surface-card);
+  --color-slate-800: var(--border-subtle);
+  --font-sans: "Google Sans", "Google Sans Flex", Arial, sans-serif;
+  --font-mono: "Google Sans Code", Courier, monospace;
+}
+
+.google-sans-base {
+  font-family: "Google Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "GRAD" 0;
+}
+
+/* Custom Amoled Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2A2A2A;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) var(--background);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #000000;
     --foreground: #ededed;
   }
 }
@@ -22,5 +61,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
