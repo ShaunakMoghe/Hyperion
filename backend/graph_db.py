@@ -107,4 +107,35 @@ class GraphStore:
             print(f"[NEO4J] Failed to generate audit ledger: {e}")
             return []
 
+    async def get_recent_traces(self, limit: int = 100):
+        """
+        Retrieves the most recent agent execution traces directly from the graph database.
+        Returns the data in a format identical to the old in-memory execution_traces list.
+        """
+        if not self.driver:
+            return []
+
+        query = """
+        MATCH (a:AgentIntent)-[:EXECUTED]->(c:APICall)-[:CAPTURED_STATE]->(s:StateSnapshot)
+        OPTIONAL MATCH (parent:AgentIntent)-[:CAUSED]->(a)
+        RETURN a.trace_id AS trace_id,
+               c.method AS method,
+               c.path AS path,
+               s.body AS request_body,
+               s.status AS status,
+               parent.trace_id AS parent_trace_id,
+               a.timestamp AS timestamp,
+               a.is_shadow_mode AS is_shadow_mode
+        ORDER BY timestamp DESC
+        LIMIT $limit
+        """
+        try:
+            async with self.driver.session() as session:
+                result = await session.run(query, limit=limit)
+                records = await result.data()
+                return records
+        except Exception as e:
+            print(f"[NEO4J] Failed to get recent traces: {e}")
+            return []
+
 graph_db = GraphStore()

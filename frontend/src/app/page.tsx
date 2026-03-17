@@ -72,9 +72,37 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // 1. Initial historical load from Neo4j
     fetchTraces();
-    const interval = setInterval(fetchTraces, 1500);
-    return () => clearInterval(interval);
+
+    // 2. Establish persistent SSE connection for real-time pushed updates
+    const eventSource = new EventSource("http://localhost:8000/api/stream/traces");
+
+    eventSource.onmessage = (event) => {
+      try {
+        const update = JSON.parse(event.data);
+        
+        setTraces((prevTraces) => {
+          const existingIdx = prevTraces.findIndex((t) => t.trace_id === update.trace_id);
+          
+          if (existingIdx !== -1) {
+            // Mutate existing trace (e.g., status changed to 'failed', or rollback 'completed')
+            const nextTraces = [...prevTraces];
+            nextTraces[existingIdx] = { ...nextTraces[existingIdx], ...update };
+            return nextTraces;
+          } else {
+            // Prepend brand new incoming trace to the top of the logs
+            return [update, ...prevTraces];
+          }
+        });
+      } catch (err) {
+        console.error("Error parsing SSE payload:", err);
+      }
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   const simulateSafeAction = async () => {

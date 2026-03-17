@@ -12,12 +12,33 @@ load_dotenv()
 
 PROXY_URL = "http://localhost:8000/api/agent/action"
 
+class AgentSessionWrapper:
+    def __init__(self):
+        self.session = requests.Session()
+        self.last_trace_id = None
+
+    def post(self, url, json_payload):
+        headers = {}
+        if self.last_trace_id:
+            headers["x-parent-trace-id"] = self.last_trace_id
+            
+        response = self.session.post(url, json=json_payload, headers=headers)
+        
+        # Capture the new trace ID returned by the proxy to link the next causal step
+        new_trace_id = response.headers.get("x-trace-id")
+        if new_trace_id:
+            self.last_trace_id = new_trace_id
+            
+        return response
+
+agent_session = AgentSessionWrapper()
+
 @tool
 def read_crm_data(query: str) -> str:
     """Reads customer data from the CRM system."""
     print(f"\n[LangChain Tool] Executing read_crm_data with query: {query}")
     try:
-        response = requests.post(PROXY_URL, json={"type": "READ_CRM", "query": query})
+        response = agent_session.post(PROXY_URL, json_payload={"type": "READ_CRM", "query": query})
         response.raise_for_status()
         return json.dumps(response.json())
     except requests.exceptions.RequestException as e:
@@ -29,7 +50,7 @@ def delete_inbox(user_id: str) -> str:
     """Deletes an entire email inbox for a given user. DANGEROUS ACTION."""
     print(f"\n[LangChain Tool] Executing delete_inbox for user: {user_id}")
     try:
-        response = requests.post(PROXY_URL, json={"type": "DANGEROUS_ACTION", "query": f"delete_inbox_{user_id}"})
+        response = agent_session.post(PROXY_URL, json_payload={"type": "DANGEROUS_ACTION", "query": f"delete_inbox_{user_id}"})
         response.raise_for_status()
         return json.dumps(response.json())
     except requests.exceptions.RequestException as e:

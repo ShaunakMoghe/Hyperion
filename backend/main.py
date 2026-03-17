@@ -34,18 +34,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory store for execution traces (simulating Pinecone/Neo4j/ClickHouse)
-execution_traces = []
+# SSE State
+active_sse_clients = set()
+
+async def broadcast_trace_update(trace_id: str, updates: dict):
+    """Pushes a partial trace update to all connected SSE clients."""
+    payload = {"trace_id": trace_id, **updates}
+    for q in list(active_sse_clients):
+        await q.put(payload)
 
 async def trigger_rollback_workflow(trace_id: str):
     """
     Connects to Temporal and kicks off the compensating transaction workflow.
     Falls back to a local async simulation if Temporal is not running.
     """
-    # Find trace and mark it as rolling back
-    trace_idx = next((i for i, t in enumerate(execution_traces) if t["trace_id"] == trace_id), -1)
-    if trace_idx != -1:
-        execution_traces[trace_idx]["rollback_status"] = "in_progress"
+    # Broadcast that rollback is starting
+    await broadcast_trace_update(trace_id, {"rollback_status": "in_progress"})
 
     try:
         client = await Client.connect("localhost:7233")
@@ -56,16 +60,14 @@ async def trigger_rollback_workflow(trace_id: str):
             task_queue="agent-rollback-queue",
         )
         print(f"[KILL SWITCH] Rollback Workflow initiated for Trace {trace_id} via Temporal")
-        if trace_idx != -1:
-             execution_traces[trace_idx]["rollback_status"] = "completed"
+        await broadcast_trace_update(trace_id, {"rollback_status": "completed"})
     except Exception as e:
         print(f"[KILL SWITCH] Temporal not available, falling back to local simulation for {trace_id}")
         await asyncio.sleep(2) # Simulate network call to CRM
         print(f"[ROLLBACK ENGINE] Executing Compensating Transaction for Trace: {trace_id}")
         await asyncio.sleep(1)
         print(f"[ROLLBACK ENGINE] ✅ Rollback Complete for Trace: {trace_id}")
-        if trace_idx != -1:
-             execution_traces[trace_idx]["rollback_status"] = "completed"
+        await broadcast_trace_update(trace_id, {"rollback_status": "completed"})
 
 @app.middleware("http")
 async def mcp_intercept_middleware(request: Request, call_next):    
@@ -80,6 +82,11 @@ async def mcp_intercept_middleware(request: Request, call_next):
     body = b""
     if request.method in ("POST", "PUT", "PATCH"):
          body = await request.body()
+         # FIX: Re-inject the consumed body stream back into the ASGI scope
+         # This prevents downstream requests from permanently hanging.
+         async def receive():
+             return {"type": "http.request", "body": body}
+         request._receive = receive
     
     # State capture mapping
     parent_trace_id = request.headers.get("x-parent-trace-id")
@@ -95,7 +102,7 @@ async def mcp_intercept_middleware(request: Request, call_next):
         "parent_trace_id": parent_trace_id,
         "is_shadow_mode": is_shadow_mode
     }
-    execution_traces.append(trace)
+    await broadcast_trace_update(trace_id, trace)
     print(f"[INTERCEPT] Captured state for {request.method} {request.url.path} (Trace: {trace_id}) [Shadow: {is_shadow_mode}]")
 
     # Write to Neo4j Graph Database
@@ -157,6 +164,9 @@ async def mcp_intercept_middleware(request: Request, call_next):
         if trace["status"] != "failed":
             trace["status"] = "success"
 
+    # Broadcast final status
+    await broadcast_trace_update(trace_id, {"status": trace["status"], "process_time_ms": trace["process_time_ms"], "response_status": trace["response_status"]})
+
     # Attach trace ID to the response so the agent can chain causal actions
     response.headers["x-trace-id"] = trace_id
 
@@ -177,10 +187,35 @@ async def chat_with_agent(request: dict):
     response = await run_agent_query(prompt)
     return {"reply": response}
 
+from fastapi.responses import StreamingResponse
+
 @app.get("/api/traces")
 async def get_traces():
-    # Provide the execution telemetry to the Next.js visual dashboard
-    return JSONResponse(content={"traces": execution_traces[::-1]})  # Reverse chronological
+    # Read true state from Neo4j instead of memory
+    traces = await graph_db.get_recent_traces()
+    return JSONResponse(content={"traces": traces})
+
+@app.get("/api/stream/traces")
+async def stream_traces(request: Request):
+    async def event_generator():
+        q = asyncio.Queue()
+        active_sse_clients.add(q)
+        try:
+            while True:
+                # Disconnect if client leaves
+                if await request.is_disconnected():
+                    break
+                
+                try:
+                    update = await asyncio.wait_for(q.get(), timeout=1.0)
+                    yield f"data: {json.dumps(update)}\n\n"
+                except asyncio.TimeoutError:
+                    # Keep-alive
+                    yield ": keep-alive\n\n"
+        finally:
+            active_sse_clients.remove(q)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/api/compliance/export/{trace_id}")
 async def export_compliance_audit(trace_id: str):
