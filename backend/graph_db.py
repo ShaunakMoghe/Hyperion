@@ -107,6 +107,33 @@ class GraphStore:
             print(f"[NEO4J] Failed to generate audit ledger: {e}")
             return []
 
+    async def get_trace_by_id(self, trace_id: str):
+        """
+        Retrieves the intercepted APICall and its JSON StateSnapshot payload by trace ID.
+        Returns a dict containing: method, path, request_body
+        """
+        if not self.driver:
+            return None
+
+        query = """
+        MATCH (c:APICall {trace_id: $trace_id})-[:CAPTURED_STATE]->(s:StateSnapshot)
+        RETURN c.method AS method, c.path AS path, s.body AS request_body
+        """
+        try:
+            async with self.driver.session() as session:
+                result = await session.run(query, trace_id=trace_id)
+                record = await result.single()
+                if record:
+                    return {
+                        "method": record["method"],
+                        "path": record["path"],
+                        "request_body": record["request_body"]
+                    }
+                return None
+        except Exception as e:
+            print(f"[NEO4J] Failed to retrieve trace by id: {e}")
+            return None
+
     async def get_recent_traces(self, limit: int = 100):
         """
         Retrieves the most recent agent execution traces directly from the graph database.

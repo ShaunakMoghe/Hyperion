@@ -9,6 +9,9 @@ from graph_db import graph_db
 # ---------------------------------------------------------
 # ACTIVITIES
 # ---------------------------------------------------------
+import requests
+from reversal_engine import generate_inverse_request
+
 @activity.defn
 async def execute_compensating_transaction(trace_id: str) -> str:
     """
@@ -16,10 +19,34 @@ async def execute_compensating_transaction(trace_id: str) -> str:
     to reverse an action that the agent took during the trace.
     """
     print(f"\n[ROLLBACK ENGINE] Executing Compensating Transaction for Trace: {trace_id}")
-    await asyncio.sleep(2) # Simulate network call
     
-    # In a real system, this would lookup the trace, extract the original request,
-    # and map it to the inverse operation (e.g. DELETE if the original was POST).
+    # 1. Look up the original trace in Neo4j to get the method, path, and request_body
+    trace = await graph_db.get_trace_by_id(trace_id)
+    if not trace:
+        print(f"[ROLLBACK ENGINE] Trace {trace_id} not found in Neo4j.")
+        return f"Failed to rollback trace {trace_id}: not found."
+    
+    # 2. Map original operation to its inverse using the zero-shot heuristic engine
+    # (e.g. POST -> DELETE)
+    inverse_method, inverse_url = await generate_inverse_request(
+        trace["method"], trace["path"], trace["request_body"]
+    )
+    
+    # 3. Physically execute the compensating transaction
+    if inverse_method and inverse_url:
+        print(f"[ROLLBACK ENGINE] Calculated Zero-Shot Reversal: {inverse_method} {inverse_url}")
+        print(f"[ROLLBACK ENGINE] Firing HTTP Reversal...")
+        try:
+            # We use a 5-second timeout and do not raise_for_status for this mock,
+            # as the dummy CRM API isn't actually bound to an alive port in this sandbox
+            # but we still want the requests library to attempt it.
+            response = requests.request(inverse_method, inverse_url, timeout=5)
+            print(f"[ROLLBACK ENGINE] Reversal request returned status code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"[ROLLBACK ENGINE] Reversal request failed (expected if Dummy CRM is not running): {e}")
+    else:
+        print(f"[ROLLBACK ENGINE] Could not calculate inverse operation for {trace['method']} {trace['path']}. Proceeding with mock sleep.")
+        await asyncio.sleep(2)
     
     # Phase 2 Graph DB: Find any downstream dependent actions
     dependent_traces = await graph_db.find_dependent_traces(trace_id)
