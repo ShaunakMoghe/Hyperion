@@ -134,6 +134,36 @@ class GraphStore:
             print(f"[NEO4J] Failed to retrieve trace by id: {e}")
             return None
 
+    async def get_causal_chain(self, failed_trace_id: str):
+        """
+        Recursively traverses UP the [:CAUSED] relationships to find all successful ancestor
+        API calls that led to this failure.
+        Returns the causal chain ordered reverse-chronologically (Last In, First Out) for Saga rollbacks.
+        """
+        if not self.driver:
+            return []
+
+        # Find all ancestors (parents, grandparents) connected via <-[:CAUSED]-
+        # and only include traces whose execution was successful.
+        query = """
+        MATCH (failed:AgentIntent {trace_id: $failed_trace_id})<-[:CAUSED*1..]-(parent:AgentIntent)-[:EXECUTED]->(c:APICall)-[:CAPTURED_STATE]->(s:StateSnapshot)
+        WHERE s.status = 'success'
+        RETURN parent.trace_id AS trace_id,
+               c.method AS method,
+               c.path AS path,
+               s.body AS request_body,
+               parent.timestamp AS timestamp
+        ORDER BY parent.timestamp DESC
+        """
+        try:
+            async with self.driver.session() as session:
+                result = await session.run(query, failed_trace_id=failed_trace_id)
+                records = await result.data()
+                return records
+        except Exception as e:
+            print(f"[NEO4J] Failed to retrieve causal chain: {e}")
+            return []
+
     async def get_recent_traces(self, limit: int = 100):
         """
         Retrieves the most recent agent execution traces directly from the graph database.

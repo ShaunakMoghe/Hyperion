@@ -15,38 +15,51 @@ from reversal_engine import generate_inverse_request
 @activity.defn
 async def execute_compensating_transaction(trace_id: str) -> str:
     """
-    Simulates reaching out to an external CRM or Database API 
-    to reverse an action that the agent took during the trace.
+    Orchestrates a Distributed Saga Rollback.
+    Queries the cross-platform graph database for the failed trace's causal chain,
+    and executes precise HTTP reversals for every upstream successful API call.
     """
-    print(f"\n[ROLLBACK ENGINE] Executing Compensating Transaction for Trace: {trace_id}")
+    print(f"\n[ROLLBACK ENGINE] Initiating Distributed Saga Rollback for Trace Failure: {trace_id}")
     
-    # 1. Look up the original trace in Neo4j to get the method, path, and request_body
-    trace = await graph_db.get_trace_by_id(trace_id)
-    if not trace:
-        print(f"[ROLLBACK ENGINE] Trace {trace_id} not found in Neo4j.")
+    # 1. Look up the failed trace in Neo4j to confirm it exists
+    failed_trace = await graph_db.get_trace_by_id(trace_id)
+    if not failed_trace:
+        print(f"[ROLLBACK ENGINE] Failed Trace {trace_id} not found in Neo4j.")
         return f"Failed to rollback trace {trace_id}: not found."
     
-    # 2. Map original operation to its inverse using the zero-shot heuristic engine
-    # (e.g. POST -> DELETE)
-    inverse_method, inverse_url = await generate_inverse_request(
-        trace["method"], trace["path"], trace["request_body"]
-    )
+    print(f"[ROLLBACK ENGINE] Diagnosed Failure on: {failed_trace['method']} {failed_trace['path']}")
+
+    # 2. Retrieve the LIFO causal chain of successful ancestors
+    causal_chain = await graph_db.get_causal_chain(trace_id)
     
-    # 3. Physically execute the compensating transaction
-    if inverse_method and inverse_url:
-        print(f"[ROLLBACK ENGINE] Calculated Zero-Shot Reversal: {inverse_method} {inverse_url}")
-        print(f"[ROLLBACK ENGINE] Firing HTTP Reversal...")
-        try:
-            # We use a 5-second timeout and do not raise_for_status for this mock,
-            # as the dummy CRM API isn't actually bound to an alive port in this sandbox
-            # but we still want the requests library to attempt it.
-            response = requests.request(inverse_method, inverse_url, timeout=5)
-            print(f"[ROLLBACK ENGINE] Reversal request returned status code: {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"[ROLLBACK ENGINE] Reversal request failed (expected if Dummy CRM is not running): {e}")
+    if not causal_chain:
+        print(f"[ROLLBACK ENGINE] No successful upstream dependencies found for {trace_id}. No compensating transactions required.")
     else:
-        print(f"[ROLLBACK ENGINE] Could not calculate inverse operation for {trace['method']} {trace['path']}. Proceeding with mock sleep.")
-        await asyncio.sleep(2)
+        print(f"[ROLLBACK ENGINE] Found {len(causal_chain)} upstream operations to reverse executing in LIFO order.")
+        
+        # 3. Loop through and reverse each parent trace
+        for step in causal_chain:
+            parent_trace_id = step["trace_id"]
+            method = step["method"]
+            path = step["path"]
+            payload = step["request_body"]
+            
+            print(f"\n[SAGA CASCADE] Reversing Ancestor Step {parent_trace_id} ({method} {path})...")
+            
+            inverse_method, inverse_url = await generate_inverse_request(method, path, payload)
+            
+            if inverse_method and inverse_url:
+                print(f"[SAGA CASCADE] Calculated Zero-Shot Reversal: {inverse_method} {inverse_url}")
+                try:
+                    response = requests.request(inverse_method, inverse_url, timeout=5)
+                    print(f"[SAGA CASCADE] Reversal request returned status code: {response.status_code}")
+                except requests.exceptions.RequestException as e:
+                    print(f"[SAGA CASCADE] ⚠️ Reversal HTTP request failed: {e}")
+            else:
+                print(f"[SAGA CASCADE] ❌ Could not calculate inverse operation for {method} {path}. Manual intervention required!")
+                # In a production Saga, we might queue this for a human operator.
+                # For now, we continue looping through the rest of the chain.
+
     
     # Phase 2 Graph DB: Find any downstream dependent actions
     dependent_traces = await graph_db.find_dependent_traces(trace_id)
