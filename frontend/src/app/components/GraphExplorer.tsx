@@ -38,6 +38,10 @@ export default function GraphExplorer({ traces }: { traces: any[] }) {
       if (isSuccess && !isShadow) color = '#10b981'; // Emerald (Executed)
       else if (isSuccess && isShadow) color = '#3b82f6'; // Blue (Shadow)
 
+      if (trace.rollback_status === 'reverted') {
+        color = '#555555'; // Dull gray for deactivated nodes
+      }
+
       nodes.push({
         id: trace.trace_id,
         name: `[${trace.method}] ${trace.path}`,
@@ -58,8 +62,17 @@ export default function GraphExplorer({ traces }: { traces: any[] }) {
 
   // Custom Canvas Rendering for Amoled UI Nodes
   const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const { x, y, color, isCore } = node;
+    const { x, y, color, isCore, traceData } = node;
     const r = isCore ? 14 : 7;
+    
+    // Draw pulsing yellow halo if currently reversing
+    if (traceData?.rollback_status === 'reversing') {
+      const pulse = Math.abs(Math.sin(Date.now() / 200)) * 6;
+      ctx.beginPath();
+      ctx.arc(x, y, r + 4 + pulse, 0, 2 * Math.PI, false);
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.4)'; // Yellow-500
+      ctx.fill();
+    }
     
     // Draw outer glow / ring
     ctx.beginPath();
@@ -103,7 +116,10 @@ export default function GraphExplorer({ traces }: { traces: any[] }) {
         linkDirectionalParticles={2}
         linkDirectionalParticleWidth={2}
         linkDirectionalParticleSpeed={0.005}
-        linkDirectionalParticleColor={(link: any) => link.target.color || '#22d3ee'}
+        linkDirectionalParticleColor={(link: any) => {
+          if (link.target.traceData?.rollback_status === 'reverted') return '#333333';
+          return link.target.color || '#22d3ee';
+        }}
         backgroundColor="#000000"
         onNodeClick={(node) => setSelectedNode(node)}
         nodeCanvasObject={paintNode}

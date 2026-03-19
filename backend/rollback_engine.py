@@ -46,6 +46,12 @@ async def execute_compensating_transaction(trace_id: str) -> str:
             
             print(f"\n[SAGA CASCADE] Reversing Ancestor Step {parent_trace_id} ({method} {path})...")
             
+            # Broadcast "reversing" status
+            try:
+                requests.post("http://localhost:8000/api/internal/saga_status", json={"trace_id": parent_trace_id, "status": "reversing"}, timeout=2)
+            except Exception:
+                pass
+            
             inverse_method, inverse_url = await generate_inverse_request(method, path, payload)
             
             if inverse_method and inverse_url:
@@ -53,6 +59,11 @@ async def execute_compensating_transaction(trace_id: str) -> str:
                 try:
                     response = requests.request(inverse_method, inverse_url, timeout=5)
                     print(f"[SAGA CASCADE] Reversal request returned status code: {response.status_code}")
+                    # Broadcast "reverted" status upon success
+                    try:
+                        requests.post("http://localhost:8000/api/internal/saga_status", json={"trace_id": parent_trace_id, "status": "reverted"}, timeout=2)
+                    except Exception:
+                        pass
                 except requests.exceptions.RequestException as e:
                     print(f"[SAGA CASCADE] ⚠️ Reversal HTTP request failed: {e}")
             else:

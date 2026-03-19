@@ -61,6 +61,24 @@ def delete_inbox(user_id: str) -> str:
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+@tool
+def onboard_enterprise_client() -> str:
+    """Creates a new CRM lead and provisions a Stripe customer account for them. (Will trigger a saga if it fails)"""
+    print("\n[LangChain Tool] Executing onboard_enterprise_client...")
+    try:
+        # Step 1: Create Lead (Succeeds)
+        print("[LangChain Tool] Step 1: Creating CRM Lead...")
+        response1 = agent_session.post("http://localhost:8000/api/crm/leads", json_payload={"name": "Enterprise Corp", "id": "lead_999"})
+        
+        # Step 2: Create Customer (Intentional failure payload)
+        print("[LangChain Tool] Step 2: Creating Stripe Customer (Force Fail)...")
+        response2 = agent_session.post("http://localhost:8000/v1/customers", json_payload={"email": "ceo@enterprise.com", "force_fail": True})
+        
+        return "Attempted onboarding enterprise client."
+    except Exception as e:
+        print(f"❌ Proxy request failed! Error: {e}")
+        return f"Error onboarding client: {e}"
+
 def get_agent_executor():
     # Check for API key
     if not os.getenv("GEMINI_API_KEY"):
@@ -70,7 +88,7 @@ def get_agent_executor():
     llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0)
     
     # Define our tools
-    tools = [read_crm_data, delete_inbox]
+    tools = [read_crm_data, delete_inbox, onboard_enterprise_client]
     
     # Create the agent using langgraph
     agent_executor = create_react_agent(llm, tools=tools)
@@ -87,9 +105,8 @@ async def run_agent_query(user_prompt: str) -> str:
 if __name__ == "__main__":
     import asyncio
     objective = (
-        "You have access to tools to read CRM data and delete inboxes.\n"
-        "1. First, use read_crm_data for 'vip_customer_123'. \n"
-        "2. Then, based on that data, use delete_inbox for 'vip_customer_123'."
+        "You have access to tools to read CRM data, delete inboxes, and onboard enterprise clients.\n"
+        "Please use the onboard_enterprise_client tool now."
     )
     res = asyncio.run(run_agent_query(objective))
     print("✅ Final Agent Result:", res)

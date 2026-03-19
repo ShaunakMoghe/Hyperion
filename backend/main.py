@@ -62,17 +62,20 @@ async def trigger_rollback_workflow(trace_id: str):
         print(f"[KILL SWITCH] Rollback Workflow initiated for Trace {trace_id} via Temporal")
         await broadcast_trace_update(trace_id, {"rollback_status": "completed"})
     except Exception as e:
-        print(f"[KILL SWITCH] Temporal not available, falling back to local simulation for {trace_id}")
-        await asyncio.sleep(2) # Simulate network call to CRM
-        print(f"[ROLLBACK ENGINE] Executing Compensating Transaction for Trace: {trace_id}")
-        await asyncio.sleep(1)
-        print(f"[ROLLBACK ENGINE] ✅ Rollback Complete for Trace: {trace_id}")
+        print(f"[KILL SWITCH] Temporal not available, executing true LIFO rollback locally for {trace_id}")
+        
+        # Import the true orchestrator dynamically to avoid circular imports if any
+        from rollback_engine import execute_compensating_transaction
+        
+        await execute_compensating_transaction(trace_id)
+        
         await broadcast_trace_update(trace_id, {"rollback_status": "completed"})
 
 @app.middleware("http")
 async def mcp_intercept_middleware(request: Request, call_next):    
-    # Skip non-agent routes (like UI telemetry routes) and CORS OPTIONS requests
-    if not request.url.path.startswith("/api/agent") or request.method == "OPTIONS":
+    # Intercept agent tools and external mocked APIs, skip UI/internal
+    intercept_prefixes = ("/api/agent/action", "/api/crm/", "/v1/")
+    if not any(request.url.path.startswith(p) for p in intercept_prefixes) or request.method == "OPTIONS":
         return await call_next(request)
 
     # 1. State Snapshot: Capture intent before agent logic runs
@@ -180,6 +183,27 @@ async def get_agent_status():
 async def execute_agent_action(action: dict):
     # This acts as the downstream mock. Validation is now handled at the proxy middleware!
     return {"result": f"Action executed.", "details": action}
+
+@app.post("/api/internal/saga_status")
+async def update_saga_status(payload: dict):
+    trace_id = payload.get("trace_id")
+    status = payload.get("status")
+    if trace_id and status:
+        await broadcast_trace_update(trace_id, {"rollback_status": status})
+    return {"success": True}
+
+@app.post("/api/crm/leads")
+@app.post("/api/crm/users")
+@app.post("/v1/customers")
+@app.post("/v1/charges")
+async def mock_external_apis(request: Request):
+    try:
+        body = await request.json()
+        if body.get("force_fail"):
+            return JSONResponse(status_code=400, content={"error": "Forced failure for Distributed Saga demo"})
+    except Exception:
+        pass
+    return {"status": "success"}
 
 @app.post("/api/chat")
 async def chat_with_agent(request: dict):

@@ -19,6 +19,7 @@ export default function Home() {
   const [traces, setTraces] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'traces' | 'graph'>('traces');
+  const [reversingTraceId, setReversingTraceId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('hyperion_active_tab');
@@ -81,6 +82,12 @@ export default function Home() {
     eventSource.onmessage = (event) => {
       try {
         const update = JSON.parse(event.data);
+        
+        if (update.rollback_status === 'reversing') {
+          setReversingTraceId(update.trace_id);
+        } else if (update.rollback_status === 'completed') {
+          setReversingTraceId(null);
+        }
         
         setTraces((prevTraces) => {
           const existingIdx = prevTraces.findIndex((t) => t.trace_id === update.trace_id);
@@ -203,10 +210,18 @@ export default function Home() {
 
         {/* Header Toolbar */}
         <header className="h-16 border-b border-[#1F1F1F] flex items-center justify-between px-6 shrink-0 bg-[#0a0a0a]/50">
-          <div>
+          <div className="flex items-center gap-4">
             <h1 className="text-base font-semibold text-slate-300">
               Agent Control Plane
             </h1>
+            {reversingTraceId && (
+              <div className="px-3 py-1 bg-yellow-950/40 border border-yellow-900/50 rounded-lg flex items-center gap-2 animate-pulse">
+                <span className="text-sm">⚠️</span>
+                <span className="text-yellow-500 text-xs font-mono font-medium tracking-wide">
+                  Saga Triggered: Reversing action {reversingTraceId}...
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <div className="relative group">
