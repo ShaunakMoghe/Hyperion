@@ -18,6 +18,7 @@ dev = [
   "pytest-asyncio>=0.23",
   "ruff>=0.4",
   "poethepoet>=0.28",
+  "uvicorn>=0.30", # in-process CRM server for integration/e2e tests
 ]
 
 [build-system]

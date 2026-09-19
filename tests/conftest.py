@@ -4,6 +4,10 @@ import os
 
 import pytest
 
+from .shared_env import crm_base_url, env  # noqa: F401
+
+__all__ = ["crm_base_url", "env"]
+
 
 def pytest_collection_modifyitems(items):
     for item in items:
