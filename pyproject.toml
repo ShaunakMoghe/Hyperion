@@ -4,7 +4,13 @@ version = "0.1.0"
 description = "Derives, verifies, and executes inverses for agent tool calls against third-party APIs, and measures how much agent side-effect damage can actually be undone."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "psycopg[binary]>=3.1", # ledger + CRM stores (H-010/H-013); binary avoids pg_config
+  "pyyaml>=6", # inverse specs and policy files are YAML (H-011/H-014)
+  "jsonschema>=4", # spec-schema validation (H-011)
+  "fastapi>=0.111", # mini-CRM target app (H-013)
+  "httpx>=0.27", # ASGI test client + future Stripe client (H-013/H-030)
+]
 
 [dependency-groups]
 dev = [
