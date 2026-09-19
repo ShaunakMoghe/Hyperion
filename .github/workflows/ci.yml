@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+    branches: [v2]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install uv
+      - run: uv sync --group dev
+      - run: uv run poe lint
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hyperion
+          POSTGRES_PASSWORD: changeme
+          POSTGRES_DB: hyperion
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hyperion"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://hyperion:changeme@localhost:5432/hyperion
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install uv
+      - run: uv sync --group dev
+      # Stripe/LLM tests self-skip when their env vars are absent
+      # (see tests/conftest.py); secrets are never set on fork PRs.
+      - run: uv run poe test
