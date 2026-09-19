@@ -1,0 +1,18 @@
+spec_version: 1
+id: crm.deals.update
+system: crm
+operation: {method: PATCH, path: "/deals/{deal_id}"}
+effect_class: reversible
+fidelity: exact
+before_image:
+  read: {method: GET, path: "/deals/{deal_id}", params: {deal_id: "$.args.deal_id"}}
+  fields: ["title", "amount_cents", "stage"]
+produces: []
+inverse:
+  operation: {method: PATCH, path: "/deals/{deal_id}"}
+  params: {deal_id: "$.args.deal_id"}
+  body_from_before_image: ["title", "amount_cents", "stage"]
+verify:
+  read: {method: GET, path: "/deals/{deal_id}", params: {deal_id: "$.args.deal_id"}}
+  compare: {fields: ["title", "amount_cents", "stage"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

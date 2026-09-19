@@ -1,0 +1,18 @@
+spec_version: 1
+id: crm.notes.add
+system: crm
+operation: {method: POST, path: "/deals/{deal_id}/notes"}
+effect_class: reversible
+fidelity: exact # inverse hard-deletes the note; absence is restored exactly
+before_image: null # create-style: the object does not exist yet
+produces:
+  - {name: note_id, from: "$.response.id"}
+inverse:
+  operation: {method: DELETE, path: "/notes/{note_id}"}
+  params: {note_id: "$.produced.note_id"}
+  body_from_before_image: []
+verify:
+  # M2 absence check: the note id must read 404 after rollback.
+  read: {method: GET, path: "/notes/{note_id}", params: {note_id: "$.produced.note_id"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

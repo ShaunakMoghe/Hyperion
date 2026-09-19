@@ -1,0 +1,18 @@
+spec_version: 1
+id: crm.leads.delete
+system: crm
+operation: {method: DELETE, path: "/leads/{lead_id}"}
+effect_class: reversible
+fidelity: exact # restore clears the tombstone; row matches the before-image
+before_image:
+  read: {method: GET, path: "/leads/{lead_id}", params: {lead_id: "$.args.lead_id"}}
+  fields: ["name", "email", "metadata", "deleted_at"]
+produces: []
+inverse:
+  operation: {method: POST, path: "/leads/{lead_id}/restore"}
+  params: {lead_id: "$.args.lead_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/leads/{lead_id}", params: {lead_id: "$.args.lead_id"}}
+  compare: {fields: ["name", "email", "metadata", "deleted_at"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

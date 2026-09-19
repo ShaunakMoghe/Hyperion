@@ -1,0 +1,18 @@
+spec_version: 1
+id: crm.deals.delete
+system: crm
+operation: {method: DELETE, path: "/deals/{deal_id}"}
+effect_class: reversible
+fidelity: exact # restore clears the tombstone; row matches the before-image
+before_image:
+  read: {method: GET, path: "/deals/{deal_id}", params: {deal_id: "$.args.deal_id"}}
+  fields: ["title", "amount_cents", "stage", "deleted_at"]
+produces: []
+inverse:
+  operation: {method: POST, path: "/deals/{deal_id}/restore"}
+  params: {deal_id: "$.args.deal_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/deals/{deal_id}", params: {deal_id: "$.args.deal_id"}}
+  compare: {fields: ["title", "amount_cents", "stage", "deleted_at"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

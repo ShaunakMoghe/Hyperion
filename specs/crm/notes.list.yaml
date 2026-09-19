@@ -1,0 +1,15 @@
+spec_version: 1
+id: crm.notes.list
+system: crm
+operation: {method: GET, path: "/deals/{deal_id}/notes"}
+effect_class: read
+fidelity: exact
+before_image:
+  read: {method: GET, path: "/deals/{deal_id}/notes", params: {deal_id: "$.args.deal_id"}}
+  fields: ["notes"]
+produces: []
+inverse: null
+verify:
+  read: {method: GET, path: "/deals/{deal_id}/notes", params: {deal_id: "$.args.deal_id"}}
+  compare: {fields: ["notes"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

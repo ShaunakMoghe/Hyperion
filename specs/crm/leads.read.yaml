@@ -1,0 +1,15 @@
+spec_version: 1
+id: crm.leads.read
+system: crm
+operation: {method: GET, path: "/leads/{lead_id}"}
+effect_class: read
+fidelity: exact
+before_image:
+  read: {method: GET, path: "/leads/{lead_id}", params: {lead_id: "$.args.lead_id"}}
+  fields: ["name", "email", "metadata"]
+produces: []
+inverse: null
+verify:
+  read: {method: GET, path: "/leads/{lead_id}", params: {lead_id: "$.args.lead_id"}}
+  compare: {fields: ["name", "email", "metadata"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

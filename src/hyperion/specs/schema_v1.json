@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperion/specs/schema_v1.json",
+  "title": "Hyperion InverseSpec v1",
+  "type": "object",
+  "required": ["spec_version", "id", "system", "operation", "effect_class",
+               "fidelity", "before_image", "produces", "inverse",
+               "verify", "provenance"],
+  "properties": {
+    "spec_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "system": {"type": "string", "minLength": 1},
+    "operation": {
+      "type": "object",
+      "required": ["method", "path"],
+      "properties": {
+        "method": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "pattern": "^/"}
+      },
+      "additionalProperties": false
+    },
+    "effect_class": {"enum": ["read", "reversible", "compensable", "irreversible"]},
+    "fidelity": {"enum": ["exact", "equivalent", "compensated", "none"]},
+    "before_image": {
+      "type": ["object", "null"],
+      "required": ["read", "fields"],
+      "properties": {
+        "read": {
+          "type": "object",
+          "required": ["method", "path"],
+          "properties": {
+            "method": {"type": "string"},
+            "path": {"type": "string"},
+            "params": {"type": "object"}
+          },
+          "additionalProperties": false
+        },
+        "fields": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "produces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "from"],
+        "properties": {
+          "name": {"type": "string"},
+          "from": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "inverse": {
+      "type": ["object", "null"],
+      "required": ["operation", "params"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["method", "path"],
+          "properties": {
+            "method": {"type": "string"},
+            "path": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "params": {"type": "object"},
+        "body_from_before_image": {
+          "type": "array", "items": {"type": "string"}, "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "verify": {
+      "type": "object",
+      "required": ["read", "compare"],
+      "properties": {
+        "read": {
+          "type": "object",
+          "required": ["method", "path"],
+          "properties": {
+            "method": {"type": "string"},
+            "path": {"type": "string"},
+            "params": {"type": "object"}
+          },
+          "additionalProperties": false
+        },
+        "compare": {
+          "type": "object",
+          "required": ["fields", "against"],
+          "properties": {
+            "fields": {"type": "array", "items": {"type": "string"}},
+            "against": {"enum": ["before_image"]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source", "verified"],
+      "properties": {
+        "source": {"enum": ["human", "llm_proposed"]},
+        "model": {"type": ["string", "null"]},
+        "verified": {"type": "boolean"},
+        "trials": {"type": "integer", "minimum": 0, "default": 0},
+        "reviewed_by": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

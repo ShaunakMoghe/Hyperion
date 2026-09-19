@@ -1,0 +1,17 @@
+spec_version: 1
+id: crm.deals.create
+system: crm
+operation: {method: POST, path: "/deals"}
+effect_class: reversible
+fidelity: equivalent # inverse tombstones; a 410 marker remains, not 404 absence
+before_image: null # create-style: the object does not exist yet
+produces:
+  - {name: deal_id, from: "$.response.id"}
+inverse:
+  operation: {method: DELETE, path: "/deals/{deal_id}"}
+  params: {deal_id: "$.produced.deal_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/deals/{deal_id}", params: {deal_id: "$.produced.deal_id"}}
+  compare: {fields: ["deleted_at"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}
