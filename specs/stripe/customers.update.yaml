@@ -1,0 +1,20 @@
+spec_version: 1
+id: stripe.customers.update
+system: stripe
+operation: {method: POST, path: "/v1/customers/{customer}"}
+effect_class: reversible
+# Scalar fields restore exactly via a second update.
+# https://docs.stripe.com/api/customers/update
+fidelity: exact
+before_image:
+  read: {method: GET, path: "/v1/customers/{customer}", params: {customer: "$.args.customer"}}
+  fields: ["name", "email", "metadata"]
+produces: []
+inverse:
+  operation: {method: POST, path: "/v1/customers/{customer}"}
+  params: {customer: "$.args.customer"}
+  body_from_before_image: ["name", "email", "metadata"]
+verify:
+  read: {method: GET, path: "/v1/customers/{customer}", params: {customer: "$.args.customer"}}
+  compare: {fields: ["name", "email", "metadata"], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

@@ -11,6 +11,8 @@ dependencies = [
   "fastapi>=0.111", # mini-CRM target app (H-013)
   "httpx>=0.27", # TestClient transport + future Stripe client (H-013/H-030)
   "mcp>=2.2", # demo MCP server + test client, v2 API (H-042/H-044)
+  "google-genai>=1.0", # synthesis proposer provider (H-061; Gemini free tier)
+  "stripe>=15", # test-mode client wrapper (H-030; raw_request API verified)
 ]
 
 [dependency-groups]
@@ -57,4 +59,4 @@ lint = "ruff check src tests targets"
 crm = "python targets/crm/app.py"
 gateway = "python -m hyperion.mcp_gateway.proxy"
 bench = "python -c \"raise SystemExit('benchmark not frozen until H-070; see bench/CHANGELOG.md')\""
-stripe-spec = "python -c \"raise SystemExit('stripe spec fetch not implemented until H-031')\""
+stripe-spec = "python studies/stripe/fetch.py"

@@ -100,6 +100,11 @@ def validate(
                 f"produces {p['name']!r}: 'from' must read $.response.*"
             )
 
+    compare = spec.get("verify", {}).get("compare", {})
+    if "expect" in compare and spec.get("before_image") is not None:
+        errors.append("verify.compare.expect is only for create-style specs "
+                      "(before_image null)")
+
     if known_operations is not None:
         for op in _read_ops(spec):
             key = (op["method"].upper(), op["path"])

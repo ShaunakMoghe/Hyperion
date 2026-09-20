@@ -1,0 +1,19 @@
+spec_version: 1
+id: stripe.coupons.create
+system: stripe
+operation: {method: POST, path: "/v1/coupons"}
+effect_class: reversible
+# Observed in test mode: DELETE returns deleted:true and the coupon is then
+# unreadable (404). https://docs.stripe.com/api/coupons/delete
+fidelity: exact
+before_image: null # create-style
+produces:
+  - {name: coupon_id, from: "$.response.id"}
+inverse:
+  operation: {method: DELETE, path: "/v1/coupons/{coupon}"}
+  params: {coupon: "$.produced.coupon_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/v1/coupons/{coupon}", params: {coupon: "$.produced.coupon_id"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

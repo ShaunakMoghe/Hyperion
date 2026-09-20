@@ -1,0 +1,18 @@
+spec_version: 1
+id: stripe.refunds.create
+system: stripe
+operation: {method: POST, path: "/v1/refunds"}
+effect_class: irreversible
+# A refund moves money back and stays on record; no API op reverses it
+# (re-charging is a new PaymentIntent, not an inverse). Held for approval.
+# https://docs.stripe.com/api/refunds/create
+fidelity: none
+before_image: null
+produces:
+  - {name: refund_id, from: "$.response.id"}
+inverse: null
+verify:
+  # No verification is performed for irreversible calls (fidelity none).
+  read: {method: GET, path: "/v1/refunds/{refund}", params: {refund: "$.produced.refund_id"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

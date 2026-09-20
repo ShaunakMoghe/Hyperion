@@ -113,6 +113,32 @@ def test_unknown_operation_rejected_when_known_supplied():
     assert any("unknown operation" in e for e in loader.validate(bad, KNOWN))
 
 
+def test_expect_allowed_only_for_create_style():
+    create = copy.deepcopy(GOOD)
+    create["operation"] = {"method": "POST", "path": "/leads"}
+    create["before_image"] = None
+    create["produces"] = [{"name": "lead_id", "from": "$.response.id"}]
+    create["inverse"] = {
+        "operation": {"method": "DELETE", "path": "/leads/{lead_id}"},
+        "params": {"lead_id": "$.produced.lead_id"},
+        "body_from_before_image": [],
+    }
+    create["fidelity"] = "equivalent"
+    create["verify"] = {
+        "read": {"method": "GET", "path": "/leads/{lead_id}",
+                 "params": {"lead_id": "$.produced.lead_id"}},
+        "compare": {"fields": [], "against": "before_image",
+                    "expect": {"status": "canceled"}},
+    }
+    known = {("POST", "/leads"), ("DELETE", "/leads/{lead_id}"),
+             ("GET", "/leads/{lead_id}")}
+    assert loader.validate(create, known) == []
+
+    bad = copy.deepcopy(GOOD)  # has before_image: expect forbidden
+    bad["verify"]["compare"]["expect"] = {"status": "canceled"}
+    assert any("expect" in e for e in loader.validate(bad))
+
+
 def test_schema_violation_short_circuits():
     bad = copy.deepcopy(GOOD)
     del bad["id"]

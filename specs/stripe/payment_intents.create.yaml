@@ -1,0 +1,20 @@
+spec_version: 1
+id: stripe.payment_intents.create
+system: stripe
+operation: {method: POST, path: "/v1/payment_intents"}
+effect_class: reversible
+# Observed in test mode: an unconfirmed intent cancels cleanly and stays
+# readable with status=canceled. Cancel is only valid pre-success.
+# https://docs.stripe.com/api/payment_intents/cancel
+fidelity: equivalent
+before_image: null # create-style
+produces:
+  - {name: payment_intent_id, from: "$.response.id"}
+inverse:
+  operation: {method: POST, path: "/v1/payment_intents/{intent}/cancel"}
+  params: {intent: "$.produced.payment_intent_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/v1/payment_intents/{intent}", params: {intent: "$.produced.payment_intent_id"}}
+  compare: {fields: [], against: before_image, expect: {status: "canceled"}}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

@@ -1,0 +1,19 @@
+spec_version: 1
+id: stripe.payment_intents.confirm
+system: stripe
+operation: {method: POST, path: "/v1/payment_intents/{intent}/confirm"}
+effect_class: compensable
+# A succeeded intent cannot be canceled; the offsetting action is a refund,
+# and both records remain. https://docs.stripe.com/api/refunds/create
+fidelity: compensated
+before_image: null # state transition; compensation covers it
+produces:
+  - {name: payment_intent_id, from: "$.response.id"}
+inverse:
+  operation: {method: POST, path: "/v1/refunds"}
+  params: {payment_intent: "$.args.intent"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/v1/payment_intents/{intent}", params: {intent: "$.args.intent"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

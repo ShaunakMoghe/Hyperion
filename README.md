@@ -13,8 +13,9 @@ verified against real Postgres and the live CRM. M4 complete: MCP stdio
 gateway (frame relay + `tools/call` interception), demo CRM server, CLI
 (`rollback plan/run/resume`, `approve`/`deny`, `ledger verify`).
 Prior prototype tagged `v1-prototype` and preserved under `legacy/`.
-M3 (Stripe) waits on `STRIPE_TEST_KEY`; M6 (synthesis) waits on an LLM
-provider key.
+M3 (Stripe) complete: test-mode client wrapper, pinned OpenAPI fetch,
+8 hand-written specs validated against the pinned spec, live e2e with
+rollback and cleanup. M6 (synthesis) proceeds on the Gemini key.
 
 Working tasks use `poethepoet` (Windows-first, see
 `docs/decisions/001-windows-tooling.md`):

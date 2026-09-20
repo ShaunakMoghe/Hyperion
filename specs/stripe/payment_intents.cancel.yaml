@@ -1,0 +1,16 @@
+spec_version: 1
+id: stripe.payment_intents.cancel
+system: stripe
+operation: {method: POST, path: "/v1/payment_intents/{intent}/cancel"}
+effect_class: irreversible
+# Cancellation is terminal: no API op un-cancels an intent. Held for approval.
+# https://docs.stripe.com/api/payment_intents/cancel
+fidelity: none
+before_image: null
+produces: []
+inverse: null
+verify:
+  # No verification is performed for irreversible calls (fidelity none).
+  read: {method: GET, path: "/v1/payment_intents/{intent}", params: {intent: "$.args.intent"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}

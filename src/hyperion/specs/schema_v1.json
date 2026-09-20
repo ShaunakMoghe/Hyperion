@@ -90,7 +90,11 @@
           "required": ["fields", "against"],
           "properties": {
             "fields": {"type": "array", "items": {"type": "string"}},
-            "against": {"enum": ["before_image"]}
+            "against": {"enum": ["before_image"]},
+            "expect": {
+              "type": "object",
+              "description": "Exact post-inverse field values; only for create-style specs (before_image null), e.g. {status: canceled}"
+            }
           },
           "additionalProperties": false
         }

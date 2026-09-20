@@ -200,9 +200,11 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
                 raise KeyError(f"before-image lacks {field!r}")
             body[field] = before[field]
         method, path = inv["operation"]["method"], inv["operation"]["path"]
-        filled, _ = fill_path(path, params)
+        filled, rest = fill_path(path, params)
         if method.upper() in ("POST", "PUT", "PATCH"):
-            code, _ = client.request(method, filled, body)
+            # Non-path params (e.g. a refund's payment_intent) ride in the
+            # body alongside before-image fields (which win on conflict).
+            code, _ = client.request(method, filled, {**rest, **body})
         else:
             code, _ = client.request(method, filled, {})
     except KeyError as e:
@@ -229,15 +231,20 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
         outcome, fidelity = _verify(client, spec, args, produced, before)
     except Exception as e:
         _finish_step(conn, step_id, "error", "error",
-                     evidence={"reason": f"verify read: {type(e).__name__}"})
+                     evidence={"inverse_status": code,
+                               "reason": f"verify read: {type(e).__name__}"})
         return "error"
+    evidence = {"inverse_status": code}
+    if replay:
+        evidence["replay"] = "already-undone"
     if outcome in ("restored_exact", "restored_equivalent", "compensated"):
         _finish_step(conn, step_id, "done", outcome, fidelity,
-                     evidence={"replay": replay} if replay else None)
+                     evidence=evidence)
         store.update_status(conn, call_id, "rolled_back")
     else:
+        evidence["reason"] = "post-inverse state mismatch"
         _finish_step(conn, step_id, "error", "verify_failed",
-                     evidence={"replay": replay})
+                     evidence=evidence)
     return outcome
 
 
@@ -268,8 +275,18 @@ def _verify(client, spec, args, produced, before) -> tuple[str, str | None]:
         return "compensated", "compensated"
 
     if before is None:
-        # Create-style: success means the object is gone (exact) or
-        # tombstoned (equivalent).
+        # Create-style: success means the object is gone (exact),
+        # tombstoned (equivalent), or in a declared terminal state
+        # (verify.compare.expect, e.g. a canceled PaymentIntent).
+        expect = spec["verify"]["compare"].get("expect")
+        if expect is not None:
+            if isinstance(body, dict) and all(
+                body.get(k) == v for k, v in expect.items()
+            ):
+                if fidelity == "exact":
+                    return "restored_exact", "exact"
+                return "restored_equivalent", "equivalent"
+            return "verify_failed", None
         if code == 404:
             return "restored_exact", "exact"
         if code == 410 and fidelity == "equivalent":

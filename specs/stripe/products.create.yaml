@@ -1,0 +1,19 @@
+spec_version: 1
+id: stripe.products.create
+system: stripe
+operation: {method: POST, path: "/v1/products"}
+effect_class: reversible
+# Observed in test mode: DELETE returns deleted:true and the product is then
+# unreadable (404). https://docs.stripe.com/api/products/delete
+fidelity: exact
+before_image: null # create-style
+produces:
+  - {name: product_id, from: "$.response.id"}
+inverse:
+  operation: {method: DELETE, path: "/v1/products/{id}"}
+  params: {id: "$.produced.product_id"}
+  body_from_before_image: []
+verify:
+  read: {method: GET, path: "/v1/products/{id}", params: {id: "$.produced.product_id"}}
+  compare: {fields: [], against: before_image}
+provenance: {source: human, model: null, verified: false, trials: 0, reviewed_by: null}
