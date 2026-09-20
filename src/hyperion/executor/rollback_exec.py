@@ -157,6 +157,12 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
                      fidelity="none")
         store.update_status(conn, call_id, "conflict")
         return "skipped_irreversible"
+    if spec["effect_class"] == "read":
+        # Reads take no effect; nothing to undo.
+        _finish_step(conn, step_id, "done", "skipped_read",
+                     fidelity="exact")
+        store.update_status(conn, call_id, "rolled_back")
+        return "skipped_read"
     client = clients.get(call["system"])
     if client is None:
         _finish_step(conn, step_id, "error", "error",

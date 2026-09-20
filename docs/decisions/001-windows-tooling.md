@@ -23,5 +23,6 @@ The owner works on Windows without GNU make. The v2 handoff (H-002) names
 ## Consequences
 
 - Contributors need `uv` rather than `make`; CI installs `uv`.
-- `bench` and `stripe-spec` tasks fail with a message until H-070/H-031
-  implement them (no fake success).
+- Note (2026-09-20): both deferred tasks have since landed —
+  `stripe-spec` fetches the pinned Stripe OpenAPI snapshot and `bench`
+  runs the bench-v1 agent tasks.

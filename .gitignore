@@ -12,3 +12,5 @@ dist/
 build/
 *.egg-info/
 studies/stripe/openapi.json
+
+bench/cache/

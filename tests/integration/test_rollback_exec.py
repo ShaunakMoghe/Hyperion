@@ -68,3 +68,21 @@ def test_concurrent_modification_yields_conflict_and_skips(env):
     code, lead = clients["crm"].request("GET", "/leads/{lead_id}",
                                         {"lead_id": lead_id})
     assert code == 410
+
+
+def test_read_call_rolls_back_as_skipped_read(env):
+    conn, run_id, clients, specs = (env["conn"], env["run_id"],
+                                    env["clients"], env["specs"])
+    lead = executor.execute(conn, run_id, "crm", "leads.create",
+                            {"name": "R"}, specs=specs, clients=clients)
+    read = executor.execute(
+        conn, run_id, "crm", "leads.read",
+        {"lead_id": lead["produced"]["lead_id"]},
+        specs=specs, clients=clients, declared_deps=[lead["call_id"]])
+    out = rollback_exec.start(conn, run_id, [lead["call_id"]],
+                              clients=clients, specs=specs)
+    assert out["status"] == "completed"
+    # Reads take no effect: skipped, never inverted (inverse is null).
+    assert out["outcomes"][read["call_id"]] == "skipped_read"
+    assert out["outcomes"][lead["call_id"]] == "restored_equivalent"
+    assert store.get_call(conn, read["call_id"])["status"] == "rolled_back"

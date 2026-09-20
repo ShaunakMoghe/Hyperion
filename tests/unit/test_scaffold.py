@@ -7,7 +7,12 @@ from hyperion import config
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_config_defaults():
+def test_config_defaults(monkeypatch):
+    # Hermetic against a developer .env: defaults hold when the vars that
+    # override them are absent (the suite otherwise runs with keys set).
+    for var in ("HYPERION_LLM_BUDGET_USD", "HYPERION_LLM_PROVIDER",
+                "HYPERION_LLM_MODEL"):
+        monkeypatch.delenv(var, raising=False)
     cfg = config.load()
     assert cfg.llm_budget_usd == 20.0
     assert cfg.llm_provider == ""

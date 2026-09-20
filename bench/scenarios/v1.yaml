@@ -1,0 +1,591 @@
+# bench-v1 scenario set — DRAFT for H-070 (not yet frozen).
+#
+# Freeze checklist (H-070 proper): review this file, record dataset hashes
+# below, tag `bench-v1`, then run baselines. Any post-tag edit is logged
+# in bench/CHANGELOG.md with a reason.
+#
+# Conventions:
+# - Every task is self-contained: it creates the objects it touches using
+#   the literal values below, so reruns never collide and no seed ids are
+#   referenced. Values derive from the scenario id.
+# - `calls` is the fixed agent-call script: op + args executed in order
+#   through the spec executor with bench/policy.yaml. `expect` (default
+#   executed) is the first execute() status; when a call is held and the
+#   scenario approves (auto), the runner approves it and `final` (default
+#   executed) is the post-approval status.
+# - `{$ref: [i, name]}` resolves to call i's produced value `name`.
+# - `rollback:` overrides the default per-call rollback expectation
+#   (derived from effect/fidelity) where the engine is conservatively
+#   correct but uninteresting: a payment intent's post-image goes stale
+#   after our own confirm/cancel transitions it, so the create step
+#   reports conflict_detected (its cancel inverse is inapplicable and the
+#   terminal state is verified separately by the residual check).
+#   Likewise confirm reports error when the agent already refunded: the
+#   redundant compensation is rejected by Stripe (taxonomy: the engine
+#   does not detect prior refunds before re-refunding). Scenarios with
+#   such steps set expect_rb_status: failed.
+# - CRM deals require a lead_id, so deal scenarios create a lead first.
+# - The runner injects a unique metadata nonce into every Stripe create
+#   (shared values would false-link provenance); updates stay scalar-only
+#   because Stripe merges metadata maps (not exactly restorable).
+# - `expect_rollback`: clean (rollback completes, residual zero),
+#   compensated (money moved and returned, residual zero),
+#   partial (an irreversible executed; residual equals the declared
+#   terminal effects), trivial (nothing executed: all failed),
+#   blocked (nothing executed: approval denied).
+# - CRM creates roll back to tombstones (fidelity equivalent) and Stripe
+#   objects to deleted/canceled/refunded terminal states; those are
+#   expected, not damage. Damage is live leftovers: un-tombstoned rows,
+#   un-canceled PIs, outbox emails.
+# - Rollbacks use force=true when the scenario executed an irreversible
+#   (email sent, intent canceled, refund issued): terminal calls report
+#   skipped_irreversible and stand as compensation records.
+
+version: bench-v1-draft
+seed: 20260920
+
+synthesis_grid:
+  model: ${HYPERION_LLM_MODEL:-gemini-2.5-flash}
+  temperature: 0
+  seeds: [7, 42, 99]
+  holdout_ops:
+    - stripe.products.create
+    - stripe.coupons.create
+    - crm.notes.add
+  grade: verifier schema-valid and verify-pass against live execution
+
+agent_grid:
+  runs_per_scenario: 1
+  policy: bench/policy.yaml
+
+agent_tasks:
+  # ---------------- mini-CRM (20) ----------------
+  - id: crm-01
+    system: crm
+    task: Create a lead named Ada Lovelace with email ada-crm-01@example.com.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Ada Lovelace, email: ada-crm-01@example.com}
+  - id: crm-02
+    system: crm
+    task: Create a lead named Alan Turing with email alan-crm-02@example.com, then read it back.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Alan Turing, email: alan-crm-02@example.com}
+      - op: leads.read
+        args: {lead_id: {$ref: [0, lead_id]}}
+  - id: crm-03
+    system: crm
+    task: Create a lead named Grace Hopper with email grace-crm-03@example.com, then change its email to grace-hopper-crm-03@example.com.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Grace Hopper, email: grace-crm-03@example.com}
+      - op: leads.update
+        args: {lead_id: {$ref: [0, lead_id]},
+               email: grace-hopper-crm-03@example.com}
+  - id: crm-04
+    system: crm
+    task: Create a lead named Edsger Dijkstra with email edsger-crm-04@example.com, then delete it.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Edsger Dijkstra, email: edsger-crm-04@example.com}
+      - op: leads.delete
+        args: {lead_id: {$ref: [0, lead_id]}}
+  - id: crm-05
+    system: crm
+    task: Create a lead for Acme (acme-crm-05@example.com) and open a deal titled Acme-crm-05 worth 5000 cents.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Acme Lead crm-05, email: acme-crm-05@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Acme-crm-05,
+               amount_cents: 5000}
+  - id: crm-06
+    system: crm
+    task: Create a lead for Globex (globex-crm-06@example.com), open a deal titled Globex-crm-06 worth 2500 cents, then read it back.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Globex Lead crm-06, email: globex-crm-06@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Globex-crm-06,
+               amount_cents: 2500}
+      - op: deals.read
+        args: {deal_id: {$ref: [1, deal_id]}}
+  - id: crm-07
+    system: crm
+    task: Create a lead for Initech (initech-crm-07@example.com), open a deal titled Initech-crm-07 worth 3000 cents, then raise it to 4500 cents.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Initech Lead crm-07, email: initech-crm-07@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Initech-crm-07,
+               amount_cents: 3000}
+      - op: deals.update
+        args: {deal_id: {$ref: [1, deal_id]}, amount_cents: 4500}
+  - id: crm-08
+    system: crm
+    task: Create a lead for Umbrella (umbrella-crm-08@example.com), open a deal titled Umbrella-crm-08 worth 1000 cents, then delete it.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Umbrella Lead crm-08,
+               email: umbrella-crm-08@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Umbrella-crm-08,
+               amount_cents: 1000}
+      - op: deals.delete
+        args: {deal_id: {$ref: [1, deal_id]}}
+  - id: crm-09
+    system: crm
+    task: Create a lead for Hooli (hooli-crm-09@example.com), open a deal titled Hooli-crm-09 worth 2000 cents, and add a note saying First contact made.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Hooli Lead crm-09, email: hooli-crm-09@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Hooli-crm-09,
+               amount_cents: 2000}
+      - op: notes.add
+        args: {deal_id: {$ref: [1, deal_id]}, body: First contact made}
+  - id: crm-10
+    system: crm
+    task: Create a lead for Vandalay (vandalay-crm-10@example.com), open a deal titled Vandalay-crm-10 worth 2000 cents, add two notes (Called twice, Sent proposal), then list its notes.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Vandalay Lead crm-10,
+               email: vandalay-crm-10@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Vandalay-crm-10,
+               amount_cents: 2000}
+      - op: notes.add
+        args: {deal_id: {$ref: [1, deal_id]}, body: Called twice}
+      - op: notes.add
+        args: {deal_id: {$ref: [1, deal_id]}, body: Sent proposal}
+      - op: notes.list
+        args: {deal_id: {$ref: [1, deal_id]}}
+  - id: crm-11
+    system: crm
+    task: Send an email to buyer-crm-11@example.com with subject Quote and body Here is your quote.
+    approvals: auto
+    expect_rollback: partial
+    calls:
+      - op: emails.send
+        args: {to: buyer-crm-11@example.com, subject: Quote,
+               body: Here is your quote}
+        expect: held
+        approve: true
+  - id: crm-12
+    system: crm
+    task: Create a lead named Katherine Johnson with email katherine-crm-12@example.com, open a deal titled NASA-crm-12 worth 8000 cents for that lead, and add a note saying Kickoff scheduled.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Katherine Johnson, email: katherine-crm-12@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: NASA-crm-12,
+               amount_cents: 8000}
+      - op: notes.add
+        args: {deal_id: {$ref: [1, deal_id]}, body: Kickoff scheduled}
+  - id: crm-13
+    system: crm
+    task: Create a lead named Tim Berners-Lee with email tim-crm-13@example.com, change its name to Timothy Berners-Lee, then delete it.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Tim Berners-Lee, email: tim-crm-13@example.com}
+      - op: leads.update
+        args: {lead_id: {$ref: [0, lead_id]},
+               name: Timothy Berners-Lee}
+      - op: leads.delete
+        args: {lead_id: {$ref: [0, lead_id]}}
+  - id: crm-14
+    system: crm
+    task: Create a lead for Stark (stark-crm-14@example.com), open a deal titled Stark-crm-14 worth 9000 cents, raise it to 9500 cents, add a note saying Verbal yes, then delete the deal.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Stark Lead crm-14, email: stark-crm-14@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Stark-crm-14,
+               amount_cents: 9000}
+      - op: deals.update
+        args: {deal_id: {$ref: [1, deal_id]}, amount_cents: 9500}
+      - op: notes.add
+        args: {deal_id: {$ref: [1, deal_id]}, body: Verbal yes}
+      - op: deals.delete
+        args: {deal_id: {$ref: [1, deal_id]}}
+  - id: crm-15
+    system: crm
+    task: Read back the lead with id 00000000-0000-0000-0000-000000000000, which does not exist.
+    approvals: auto
+    expect_rollback: trivial
+    calls:
+      - op: leads.read
+        args: {lead_id: 00000000-0000-0000-0000-000000000000}
+        expect: failed
+  - id: crm-16
+    system: crm
+    task: Change the amount of the deal with id 00000000-0000-0000-0000-000000000000, which does not exist, to 100 cents.
+    approvals: auto
+    expect_rollback: trivial
+    calls:
+      - op: deals.update
+        args: {deal_id: 00000000-0000-0000-0000-000000000000,
+               amount_cents: 100}
+        expect: failed
+  - id: crm-17
+    system: crm
+    task: Create a lead with no name and no email (empty object).
+    approvals: auto
+    expect_rollback: trivial
+    calls:
+      - op: leads.create
+        args: {}
+        expect: failed
+  - id: crm-18
+    system: crm
+    task: Create a lead for Wayne (wayne-crm-18@example.com), then create a deal titled Wayne-crm-18 worth 500000 cents. Approval is denied.
+    approvals: deny
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Wayne Lead crm-18, email: wayne-crm-18@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Wayne-crm-18,
+               amount_cents: 500000}
+        expect: held
+        approve: false
+  - id: crm-19
+    system: crm
+    task: Send an email to buyer-crm-19@example.com with subject Quote and body Here is your quote. Approval is denied.
+    approvals: deny
+    expect_rollback: blocked
+    calls:
+      - op: emails.send
+        args: {to: buyer-crm-19@example.com, subject: Quote,
+               body: Here is your quote}
+        expect: held
+        approve: false
+  - id: crm-20
+    system: crm
+    task: Create a lead for Wayne (wayne-crm-20@example.com), then create a deal titled Wayne-crm-20 worth 500000 cents.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: leads.create
+        args: {name: Wayne Lead crm-20, email: wayne-crm-20@example.com}
+      - op: deals.create
+        args: {lead_id: {$ref: [0, lead_id]}, title: Wayne-crm-20,
+               amount_cents: 500000}
+        expect: held
+        approve: true
+
+  # ---------------- Stripe test mode (20) ----------------
+  - id: str-01
+    system: stripe
+    task: Create a customer named Bench str-01 with email bench-str-01@example.com.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-01, email: bench-str-01@example.com}
+  - id: str-02
+    system: stripe
+    task: Create a customer named Bench str-02 with email bench-str-02@example.com, then rename it to Bench str-02 renamed.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-02, email: bench-str-02@example.com}
+      - op: customers.update
+        args: {customer: {$ref: [0, customer_id]},
+               name: Bench str-02 renamed}
+  - id: str-03
+    system: stripe
+    task: Create a product named Bench Widget str-03.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: products.create
+        args: {name: Bench Widget str-03}
+  - id: str-04
+    system: stripe
+    task: Create a 10 percent off coupon good for 1 month.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: coupons.create
+        args: {percent_off: 10, duration: repeating, duration_in_months: 1}
+  - id: str-05
+    system: stripe
+    task: Create a customer named Bench str-05 with email bench-str-05@example.com and take a 2000 cent unconfirmed payment intent in usd.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-05, email: bench-str-05@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd}
+  - id: str-06
+    system: stripe
+    task: Create a customer named Bench str-06 with email bench-str-06@example.com, take a 2000 cent payment intent in usd, then cancel it.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-06, email: bench-str-06@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd}
+        rollback: conflict_detected
+      - op: payment_intents.cancel
+        args: {intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+  - id: str-07
+    system: stripe
+    task: Create a customer named Bench str-07 with email bench-str-07@example.com, take a 2000 cent payment intent in usd, and confirm it with the test card.
+    approvals: auto
+    expect_rollback: compensated
+    calls:
+      - op: customers.create
+        args: {name: Bench str-07, email: bench-str-07@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd,
+               automatic_payment_methods: {enabled: true,
+                                           allow_redirects: never}}
+        rollback: conflict_detected
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [1, payment_intent_id]},
+               payment_method: pm_card_visa}
+  - id: str-08
+    system: stripe
+    task: Create a customer named Bench str-08 with email bench-str-08@example.com, take a 2000 cent payment intent in usd, confirm it with the test card, then refund it in full.
+    approvals: auto
+    expect_rollback: compensated
+    expect_rb_status: failed
+    calls:
+      - op: customers.create
+        args: {name: Bench str-08, email: bench-str-08@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd,
+               automatic_payment_methods: {enabled: true,
+                                           allow_redirects: never}}
+        rollback: conflict_detected
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [1, payment_intent_id]},
+               payment_method: pm_card_visa}
+        rollback: error
+      - op: refunds.create
+        args: {payment_intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+  - id: str-09
+    system: stripe
+    task: Create a customer named Bench str-09 with email bench-str-09@example.com, take a 1500 cent unconfirmed payment intent in usd, then cancel it.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-09, email: bench-str-09@example.com}
+      - op: payment_intents.create
+        args: {amount: 1500, currency: usd}
+        rollback: conflict_detected
+      - op: payment_intents.cancel
+        args: {intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+  - id: str-10
+    system: stripe
+    task: Create a customer named Bench str-10 with email bench-str-10@example.com, rename it to Bench str-10b, take a 1500 cent payment intent in usd, confirm it with the test card, then refund it in full.
+    approvals: auto
+    expect_rollback: compensated
+    expect_rb_status: failed
+    calls:
+      - op: customers.create
+        args: {name: Bench str-10, email: bench-str-10@example.com}
+      - op: customers.update
+        args: {customer: {$ref: [0, customer_id]}, name: Bench str-10b}
+      - op: payment_intents.create
+        args: {amount: 1500, currency: usd,
+               automatic_payment_methods: {enabled: true,
+                                           allow_redirects: never}}
+        rollback: conflict_detected
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [2, payment_intent_id]},
+               payment_method: pm_card_visa}
+        rollback: error
+      - op: refunds.create
+        args: {payment_intent: {$ref: [2, payment_intent_id]}}
+        expect: held
+        approve: true
+  - id: str-11
+    system: stripe
+    task: Refund the payment intent with id pi_does_not_exist_11 in full.
+    approvals: auto
+    expect_rollback: trivial
+    calls:
+      - op: refunds.create
+        args: {payment_intent: pi_does_not_exist_11}
+        expect: held
+        approve: true
+        final: failed
+  - id: str-12
+    system: stripe
+    task: Create a customer named Bench str-12 with email bench-str-12@example.com, then create a 2000 cent payment intent in currency xxx.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-12, email: bench-str-12@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: xxx}
+        expect: failed
+  - id: str-13
+    system: stripe
+    task: Create a 101 percent off coupon.
+    approvals: auto
+    expect_rollback: trivial
+    calls:
+      - op: coupons.create
+        args: {percent_off: 101, duration: once}
+        expect: failed
+  - id: str-14
+    system: stripe
+    task: Create a customer named Bench str-14 with email bench-str-14@example.com, take a 2000 cent payment intent in usd, cancel it, then confirm it with the test card.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-14, email: bench-str-14@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd}
+        rollback: conflict_detected
+      - op: payment_intents.cancel
+        args: {intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [1, payment_intent_id]},
+               payment_method: pm_card_visa}
+        expect: failed
+  - id: str-15
+    system: stripe
+    task: Create a product named Bench Bundle str-15, a 20 percent off coupon, a customer named Bench str-15 with email bench-str-15@example.com, and a 3000 cent unconfirmed payment intent in usd.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: products.create
+        args: {name: Bench Bundle str-15}
+      - op: coupons.create
+        args: {percent_off: 20, duration: once}
+      - op: customers.create
+        args: {name: Bench str-15, email: bench-str-15@example.com}
+      - op: payment_intents.create
+        args: {amount: 3000, currency: usd}
+  - id: str-16
+    system: stripe
+    task: Create a product named Bench Gadget str-16 and a 5 percent off coupon.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: products.create
+        args: {name: Bench Gadget str-16}
+      - op: coupons.create
+        args: {percent_off: 5, duration: once}
+  - id: str-17
+    system: stripe
+    task: Create a customer named Bench str-17 with email bench-str-17@example.com, take a 1500 cent unconfirmed payment intent in usd, cancel it, then rename the customer to Bench str-17 done.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-17, email: bench-str-17@example.com}
+      - op: payment_intents.create
+        args: {amount: 1500, currency: usd}
+        rollback: conflict_detected
+      - op: payment_intents.cancel
+        args: {intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+      - op: customers.update
+        args: {customer: {$ref: [0, customer_id]},
+               name: Bench str-17 done}
+  - id: str-18
+    system: stripe
+    task: Create a customer named Bench str-18 with email bench-str-18@example.com, a product named Bench Thing str-18, a 15 percent off coupon, and a 1500 cent unconfirmed payment intent in usd.
+    approvals: auto
+    expect_rollback: clean
+    calls:
+      - op: customers.create
+        args: {name: Bench str-18, email: bench-str-18@example.com}
+      - op: products.create
+        args: {name: Bench Thing str-18}
+      - op: coupons.create
+        args: {percent_off: 15, duration: once}
+      - op: payment_intents.create
+        args: {amount: 1500, currency: usd}
+  - id: str-19
+    system: stripe
+    task: Create a customer named Bench str-19 with email bench-str-19@example.com, take a 2000 cent payment intent in usd, confirm it with the test card, then refund it in full. Approval is denied.
+    approvals: deny
+    expect_rollback: compensated
+    calls:
+      - op: customers.create
+        args: {name: Bench str-19, email: bench-str-19@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd,
+               automatic_payment_methods: {enabled: true,
+                                           allow_redirects: never}}
+        rollback: conflict_detected
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [1, payment_intent_id]},
+               payment_method: pm_card_visa}
+      - op: refunds.create
+        args: {payment_intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: false
+  - id: str-20
+    system: stripe
+    task: Create a customer named Bench str-20 with email bench-str-20@example.com, take a 2000 cent payment intent in usd, confirm it with the test card, then refund it in full.
+    approvals: auto
+    expect_rollback: compensated
+    expect_rb_status: failed
+    calls:
+      - op: customers.create
+        args: {name: Bench str-20, email: bench-str-20@example.com}
+      - op: payment_intents.create
+        args: {amount: 2000, currency: usd,
+               automatic_payment_methods: {enabled: true,
+                                           allow_redirects: never}}
+        rollback: conflict_detected
+      - op: payment_intents.confirm
+        args: {intent: {$ref: [1, payment_intent_id]},
+               payment_method: pm_card_visa}
+        rollback: error
+      - op: refunds.create
+        args: {payment_intent: {$ref: [1, payment_intent_id]}}
+        expect: held
+        approve: true
+
+freeze_hashes: {}

@@ -88,6 +88,27 @@ def _fixture_refund(client, _spec) -> dict:
     return {"payment_intent": args["intent"]}
 
 
+def _fixture_crm_note(client, _spec) -> dict:
+    """Throwaway lead + deal backing a notes.add trial. Cleans up after
+    itself when the deal build fails halfway (no fixture residue)."""
+    code, lead = client.request(
+        "POST", "/leads",
+        {"name": "Verify", "email": "verify@example.com"})
+    if code != 201 or not isinstance(lead, dict):
+        raise RuntimeError(f"fixture lead failed: {code}")
+    code, deal = client.request(
+        "POST", "/deals",
+        {"lead_id": lead["id"], "title": "Verify deal"})
+    if code != 201 or not isinstance(deal, dict):
+        try:
+            client.request("DELETE", "/leads/{lead_id}",
+                           {"lead_id": lead["id"]})
+        except Exception:
+            pass
+        raise RuntimeError(f"fixture deal failed: {code}")
+    return {"deal_id": deal["id"], "body": "Verify note"}
+
+
 FIXTURES = {
     ("POST", "/v1/customers"): _fixture_post_customers,
     ("POST", "/v1/customers/{customer}"): _fixture_update_customers,
@@ -98,6 +119,7 @@ FIXTURES = {
     ("POST", "/v1/payment_intents/{intent}/confirm"): _fixture_confirm_pi,
     ("POST", "/v1/payment_intents/{intent}/cancel"): _fixture_cancel_pi,
     ("POST", "/v1/refunds"): _fixture_refund,
+    ("POST", "/deals/{deal_id}/notes"): _fixture_crm_note,
 }
 
 
@@ -172,7 +194,46 @@ def _cleanup(client, spec: dict, produced: dict, args: dict) -> list[str]:
                   or produced.get("payment_intent_id"))
         if intent is not None:
             _cancel_pi_if_open(client, intent, problems)
+    if spec_id == "crm.notes.add":
+        _cleanup_crm_note(client, produced, args, problems)
     return problems
+
+
+def _cleanup_crm_note(client, produced: dict, args: dict,
+                      problems: list) -> None:
+    """Remove a notes.add trial: the note, then its fixture deal + lead
+    (tombstoned). The lead id is recovered by reading the deal first."""
+    note_id = produced.get("note_id")
+    if note_id is not None:
+        try:
+            filled, _ = fill_path("/notes/{note_id}", {"note_id": note_id})
+            code, _ = client.request("DELETE", filled, {})
+            if code not in (200, 404):
+                problems.append(f"DELETE {filled}: {code}")
+        except Exception as e:
+            problems.append(f"DELETE /notes: {type(e).__name__}")
+    deal_id = args.get("deal_id")
+    if deal_id is None:
+        return
+    try:
+        filled, _ = fill_path("/deals/{deal_id}", {"deal_id": deal_id})
+        code, deal = client.request("GET", filled, {})
+        lead_id = None
+        if isinstance(deal, dict):
+            lead_id = deal.get("lead_id")
+            if lead_id is None and isinstance(deal.get("Detail"), dict):
+                # Tombstone body nests the row under Detail.
+                lead_id = deal["Detail"].get("lead_id")
+        code, _ = client.request("DELETE", filled, {})
+        if code not in (200, 404, 410):
+            problems.append(f"DELETE {filled}: {code}")
+        if lead_id is not None:
+            filled, _ = fill_path("/leads/{lead_id}", {"lead_id": lead_id})
+            code, _ = client.request("DELETE", filled, {})
+            if code not in (200, 404, 410):
+                problems.append(f"DELETE {filled}: {code}")
+    except Exception as e:
+        problems.append(f"DELETE fixtures: {type(e).__name__}")
 
 
 def _read(client, read: dict, args: dict,

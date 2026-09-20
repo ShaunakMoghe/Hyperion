@@ -15,6 +15,7 @@ EXPECTED = {
     ("reversible", "exact"): "restored_exact",
     ("reversible", "equivalent"): "restored_equivalent",
     ("compensable", "compensated"): "compensated",
+    ("read", "exact"): "skipped_read",
 }
 
 

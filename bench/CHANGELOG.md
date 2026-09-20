@@ -1,5 +1,5 @@
 # Benchmark changelog
 
-Scenarios are not frozen yet. H-070 will write the 40 scenarios and tag
-`bench-v1` before any baseline or system run. Any later change to scenarios
-after the tag is recorded here with the reason.
+The 40 bench-v1 scenarios are drafted in `scenarios/v1.yaml` but not
+frozen yet. The `bench-v1` tag freezes them before any baseline runs.
+After the tag, every scenario change is recorded here with its reason.

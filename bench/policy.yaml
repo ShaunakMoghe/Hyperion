@@ -1,0 +1,17 @@
+# Bench policy (M7): what the agent-call scripts are allowed to do.
+# Runner loads this file and passes it to every execute() call.
+# Scenarios declare approvals: auto (approve held calls) or deny (leave held).
+default: allow
+rules:
+  # Big-ticket deals need a human (crm-18 held under deny, auto under crm-20).
+  - match: {system: crm, operation: deals.create,
+            when: "amount_cents > 100000"}
+    effect: require_approval
+  # Sending email is irreversible: held even without this rule (executor
+  # holds all irreversibles); the rule records bench intent explicitly.
+  - match: {system: crm, operation: emails.send}
+    effect: require_approval
+  # Moving money back is approval-gated in the bench (str-19 vs str-20).
+  # Refunds are also executor-held as irreversible; same note as above.
+  - match: {system: stripe, operation: refunds.create}
+    effect: require_approval
