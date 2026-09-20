@@ -1,0 +1,2629 @@
+{
+  "excluded": [
+    {
+      "method": "POST",
+      "path": "/v1/account_links",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/accounts/{account}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/bank_accounts",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/accounts/{account}/bank_accounts/{id}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/bank_accounts/{id}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/capabilities/{capability}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/external_accounts",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/accounts/{account}/external_accounts/{id}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/external_accounts/{id}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/login_links",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/people",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/accounts/{account}/people/{person}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/people/{person}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/persons",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/accounts/{account}/persons/{person}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/persons/{person}",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/reject",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/accounts/{account}/unreject",
+      "reason": "account-level operations are out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/capture",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/dispute",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/dispute/close",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/refund",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/refunds",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/charges/{charge}/refunds/{refund}",
+      "reason": "legacy endpoint; the study uses PaymentIntents"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/climate/orders",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/climate/orders/{order}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/climate/orders/{order}/cancel",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/authorizations/{authorization}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/authorizations/{authorization}/approve",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/authorizations/{authorization}/decline",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/cardholders",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/cardholders/{cardholder}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/cards",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/cards/{card}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/disputes",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/disputes/{dispute}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/disputes/{dispute}/submit",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/personalization_designs",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/personalization_designs/{personalization_design}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/settlements/{settlement}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/tokens/{token}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/issuing/transactions/{transaction}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/{payout}",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/{payout}/cancel",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/payouts/{payout}/reverse",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/reporting/report_runs",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sigma/saved_queries/{id}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/calculations",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/registrations",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/registrations/{id}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/settings",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/transactions/create_from_calculation",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tax/transactions/create_reversal",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/configurations",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/terminal/configurations/{configuration}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/configurations/{configuration}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/connection_tokens",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/locations",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/terminal/locations/{location}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/locations/{location}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/onboarding_links",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/terminal/readers/{reader}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/cancel_action",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/collect_inputs",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/collect_payment_method",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/confirm_payment_intent",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/process_payment_intent",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/process_setup_intent",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/refund_payment",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/readers/{reader}/set_reader_display",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/terminal/refunds",
+      "reason": "hardware-dependent surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/topups",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/topups/{topup}",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/topups/{topup}/cancel",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/transfers",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/transfers/{id}/reversals",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/transfers/{transfer}",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/transfers/{transfer}/reversals/{id}",
+      "reason": "live-money rail out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/credit_reversals",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/debit_reversals",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/financial_accounts",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/financial_accounts/{financial_account}",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/financial_accounts/{financial_account}/close",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/financial_accounts/{financial_account}/features",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/inbound_transfers",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/inbound_transfers/{inbound_transfer}/cancel",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/outbound_payments",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/outbound_payments/{id}/cancel",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/outbound_transfers",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/treasury/outbound_transfers/{outbound_transfer}/cancel",
+      "reason": "separate product surface, out of study scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhook_endpoints",
+      "reason": "account-level delivery config is out of scope"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/webhook_endpoints/{webhook_endpoint}",
+      "reason": "account-level delivery config is out of scope"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhook_endpoints/{webhook_endpoint}",
+      "reason": "account-level delivery config is out of scope"
+    }
+  ],
+  "mutating_operations": 329,
+  "resource_counts": {
+    "account_links": 1,
+    "account_sessions": 1,
+    "accounts": 19,
+    "apple_pay": 2,
+    "application_fees": 3,
+    "apps": 2,
+    "balance_settings": 1,
+    "billing": 17,
+    "billing_portal": 3,
+    "charges": 8,
+    "checkout": 3,
+    "climate": 3,
+    "coupons": 3,
+    "credit_notes": 3,
+    "customer_sessions": 1,
+    "customers": 25,
+    "disputes": 2,
+    "entitlements": 2,
+    "ephemeral_keys": 2,
+    "external_accounts": 1,
+    "file_links": 2,
+    "files": 1,
+    "financial_connections": 5,
+    "forwarding": 1,
+    "identity": 4,
+    "invoice_rendering_templates": 2,
+    "invoiceitems": 3,
+    "invoices": 14,
+    "issuing": 15,
+    "link_account_sessions": 1,
+    "linked_accounts": 2,
+    "payment_intents": 8,
+    "payment_links": 2,
+    "payment_method_configurations": 2,
+    "payment_method_domains": 3,
+    "payment_methods": 4,
+    "payment_records": 7,
+    "payouts": 4,
+    "plans": 3,
+    "prices": 2,
+    "products": 5,
+    "promotion_codes": 2,
+    "quotes": 5,
+    "radar": 6,
+    "refunds": 3,
+    "reporting": 1,
+    "reviews": 1,
+    "setup_intents": 5,
+    "shipping_rates": 2,
+    "sigma": 1,
+    "sources": 3,
+    "subscription_items": 3,
+    "subscription_schedules": 4,
+    "subscriptions": 6,
+    "tax": 6,
+    "tax_ids": 2,
+    "tax_rates": 2,
+    "terminal": 20,
+    "test_helpers": 42,
+    "tokens": 1,
+    "topups": 3,
+    "transfers": 4,
+    "treasury": 12,
+    "webhook_endpoints": 3
+  },
+  "resources": {
+    "account_sessions": [
+      {
+        "method": "POST",
+        "operation_id": "PostAccountSessions",
+        "path": "/v1/account_sessions",
+        "required_path_params": [],
+        "summary": "Create an Account Session"
+      }
+    ],
+    "apple_pay": [
+      {
+        "method": "POST",
+        "operation_id": "PostApplePayDomains",
+        "path": "/v1/apple_pay/domains",
+        "required_path_params": [],
+        "summary": ""
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteApplePayDomainsDomain",
+        "path": "/v1/apple_pay/domains/{domain}",
+        "required_path_params": [
+          "domain"
+        ],
+        "summary": ""
+      }
+    ],
+    "application_fees": [
+      {
+        "method": "POST",
+        "operation_id": "PostApplicationFeesFeeRefundsId",
+        "path": "/v1/application_fees/{fee}/refunds/{id}",
+        "required_path_params": [
+          "fee",
+          "id"
+        ],
+        "summary": "Update an application fee refund"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostApplicationFeesIdRefund",
+        "path": "/v1/application_fees/{id}/refund",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": ""
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostApplicationFeesIdRefunds",
+        "path": "/v1/application_fees/{id}/refunds",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Create an application fee refund"
+      }
+    ],
+    "apps": [
+      {
+        "method": "POST",
+        "operation_id": "PostAppsSecrets",
+        "path": "/v1/apps/secrets",
+        "required_path_params": [],
+        "summary": "Set a Secret"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostAppsSecretsDelete",
+        "path": "/v1/apps/secrets/delete",
+        "required_path_params": [],
+        "summary": "Delete a Secret"
+      }
+    ],
+    "balance_settings": [
+      {
+        "method": "POST",
+        "operation_id": "PostBalanceSettings",
+        "path": "/v1/balance_settings",
+        "required_path_params": [],
+        "summary": "Update balance settings"
+      }
+    ],
+    "billing": [
+      {
+        "method": "POST",
+        "operation_id": "PostBillingAlerts",
+        "path": "/v1/billing/alerts",
+        "required_path_params": [],
+        "summary": "Create a billing alert"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingAlertsIdActivate",
+        "path": "/v1/billing/alerts/{id}/activate",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Activate a billing alert"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingAlertsIdArchive",
+        "path": "/v1/billing/alerts/{id}/archive",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Archive a billing alert"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingAlertsIdDeactivate",
+        "path": "/v1/billing/alerts/{id}/deactivate",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Deactivate a billing alert"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingCreditGrants",
+        "path": "/v1/billing/credit_grants",
+        "required_path_params": [],
+        "summary": "Create a credit grant"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingCreditGrantsId",
+        "path": "/v1/billing/credit_grants/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a credit grant"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingCreditGrantsIdExpire",
+        "path": "/v1/billing/credit_grants/{id}/expire",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Expire a credit grant"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingCreditGrantsIdVoid",
+        "path": "/v1/billing/credit_grants/{id}/void",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Void a credit grant"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingFeedbackOptions",
+        "path": "/v1/billing/feedback_options",
+        "required_path_params": [],
+        "summary": "Create a feedback option"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingFeedbackOptionsId",
+        "path": "/v1/billing/feedback_options/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a feedback option"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingFeedbackOptionsIdDeactivate",
+        "path": "/v1/billing/feedback_options/{id}/deactivate",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Deactivate a feedback option"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMeterEventAdjustments",
+        "path": "/v1/billing/meter_event_adjustments",
+        "required_path_params": [],
+        "summary": "Create a billing meter event adjustment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMeterEvents",
+        "path": "/v1/billing/meter_events",
+        "required_path_params": [],
+        "summary": "Create a billing meter event"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMeters",
+        "path": "/v1/billing/meters",
+        "required_path_params": [],
+        "summary": "Create a billing meter"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMetersId",
+        "path": "/v1/billing/meters/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a billing meter"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMetersIdDeactivate",
+        "path": "/v1/billing/meters/{id}/deactivate",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Deactivate a billing meter"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingMetersIdReactivate",
+        "path": "/v1/billing/meters/{id}/reactivate",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Reactivate a billing meter"
+      }
+    ],
+    "billing_portal": [
+      {
+        "method": "POST",
+        "operation_id": "PostBillingPortalConfigurations",
+        "path": "/v1/billing_portal/configurations",
+        "required_path_params": [],
+        "summary": "Create a portal configuration"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingPortalConfigurationsConfiguration",
+        "path": "/v1/billing_portal/configurations/{configuration}",
+        "required_path_params": [
+          "configuration"
+        ],
+        "summary": "Update a portal configuration"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostBillingPortalSessions",
+        "path": "/v1/billing_portal/sessions",
+        "required_path_params": [],
+        "summary": "Create a portal session"
+      }
+    ],
+    "checkout": [
+      {
+        "method": "POST",
+        "operation_id": "PostCheckoutSessions",
+        "path": "/v1/checkout/sessions",
+        "required_path_params": [],
+        "summary": "Create a Checkout Session"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCheckoutSessionsSession",
+        "path": "/v1/checkout/sessions/{session}",
+        "required_path_params": [
+          "session"
+        ],
+        "summary": "Update a Checkout Session"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCheckoutSessionsSessionExpire",
+        "path": "/v1/checkout/sessions/{session}/expire",
+        "required_path_params": [
+          "session"
+        ],
+        "summary": "Expire a Checkout Session"
+      }
+    ],
+    "coupons": [
+      {
+        "method": "POST",
+        "operation_id": "PostCoupons",
+        "path": "/v1/coupons",
+        "required_path_params": [],
+        "summary": "Create a coupon"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCouponsCoupon",
+        "path": "/v1/coupons/{coupon}",
+        "required_path_params": [
+          "coupon"
+        ],
+        "summary": "Delete a coupon"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCouponsCoupon",
+        "path": "/v1/coupons/{coupon}",
+        "required_path_params": [
+          "coupon"
+        ],
+        "summary": "Update a coupon"
+      }
+    ],
+    "credit_notes": [
+      {
+        "method": "POST",
+        "operation_id": "PostCreditNotes",
+        "path": "/v1/credit_notes",
+        "required_path_params": [],
+        "summary": "Create a credit note"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCreditNotesId",
+        "path": "/v1/credit_notes/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a credit note"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCreditNotesIdVoid",
+        "path": "/v1/credit_notes/{id}/void",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Void a credit note"
+      }
+    ],
+    "customer_sessions": [
+      {
+        "method": "POST",
+        "operation_id": "PostCustomerSessions",
+        "path": "/v1/customer_sessions",
+        "required_path_params": [],
+        "summary": "Create a Customer Session"
+      }
+    ],
+    "customers": [
+      {
+        "method": "POST",
+        "operation_id": "PostCustomers",
+        "path": "/v1/customers",
+        "required_path_params": [],
+        "summary": "Create a customer"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomer",
+        "path": "/v1/customers/{customer}",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Delete a customer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomer",
+        "path": "/v1/customers/{customer}",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Update a customer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerBalanceTransactions",
+        "path": "/v1/customers/{customer}/balance_transactions",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a customer balance transaction"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerBalanceTransactionsTransaction",
+        "path": "/v1/customers/{customer}/balance_transactions/{transaction}",
+        "required_path_params": [
+          "customer",
+          "transaction"
+        ],
+        "summary": "Update a customer credit balance transaction"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerBankAccounts",
+        "path": "/v1/customers/{customer}/bank_accounts",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a card"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerBankAccountsId",
+        "path": "/v1/customers/{customer}/bank_accounts/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Delete a customer source"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerBankAccountsId",
+        "path": "/v1/customers/{customer}/bank_accounts/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Update a card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerBankAccountsIdVerify",
+        "path": "/v1/customers/{customer}/bank_accounts/{id}/verify",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Verify a bank account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerCards",
+        "path": "/v1/customers/{customer}/cards",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a card"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerCardsId",
+        "path": "/v1/customers/{customer}/cards/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Delete a customer source"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerCardsId",
+        "path": "/v1/customers/{customer}/cards/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Update a card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerCashBalance",
+        "path": "/v1/customers/{customer}/cash_balance",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Update a cash balance's settings"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerDiscount",
+        "path": "/v1/customers/{customer}/discount",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Delete a customer discount"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerFundingInstructions",
+        "path": "/v1/customers/{customer}/funding_instructions",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create or retrieve funding instructions for a customer cash balance"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerSources",
+        "path": "/v1/customers/{customer}/sources",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a card"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerSourcesId",
+        "path": "/v1/customers/{customer}/sources/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Delete a customer source"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerSourcesId",
+        "path": "/v1/customers/{customer}/sources/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Update a card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerSourcesIdVerify",
+        "path": "/v1/customers/{customer}/sources/{id}/verify",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Verify a bank account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerSubscriptions",
+        "path": "/v1/customers/{customer}/subscriptions",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a subscription"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerSubscriptionsSubscriptionExposedId",
+        "path": "/v1/customers/{customer}/subscriptions/{subscription_exposed_id}",
+        "required_path_params": [
+          "customer",
+          "subscription_exposed_id"
+        ],
+        "summary": "Cancel a subscription"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerSubscriptionsSubscriptionExposedId",
+        "path": "/v1/customers/{customer}/subscriptions/{subscription_exposed_id}",
+        "required_path_params": [
+          "customer",
+          "subscription_exposed_id"
+        ],
+        "summary": "Update a subscription on a customer"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerSubscriptionsSubscriptionExposedIdDiscount",
+        "path": "/v1/customers/{customer}/subscriptions/{subscription_exposed_id}/discount",
+        "required_path_params": [
+          "customer",
+          "subscription_exposed_id"
+        ],
+        "summary": "Delete a customer discount"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostCustomersCustomerTaxIds",
+        "path": "/v1/customers/{customer}/tax_ids",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Create a Customer tax ID"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteCustomersCustomerTaxIdsId",
+        "path": "/v1/customers/{customer}/tax_ids/{id}",
+        "required_path_params": [
+          "customer",
+          "id"
+        ],
+        "summary": "Delete a Customer tax ID"
+      }
+    ],
+    "disputes": [
+      {
+        "method": "POST",
+        "operation_id": "PostDisputesDispute",
+        "path": "/v1/disputes/{dispute}",
+        "required_path_params": [
+          "dispute"
+        ],
+        "summary": "Update a dispute"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostDisputesDisputeClose",
+        "path": "/v1/disputes/{dispute}/close",
+        "required_path_params": [
+          "dispute"
+        ],
+        "summary": "Close a dispute"
+      }
+    ],
+    "entitlements": [
+      {
+        "method": "POST",
+        "operation_id": "PostEntitlementsFeatures",
+        "path": "/v1/entitlements/features",
+        "required_path_params": [],
+        "summary": "Create a feature"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostEntitlementsFeaturesId",
+        "path": "/v1/entitlements/features/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Updates a feature"
+      }
+    ],
+    "ephemeral_keys": [
+      {
+        "method": "POST",
+        "operation_id": "PostEphemeralKeys",
+        "path": "/v1/ephemeral_keys",
+        "required_path_params": [],
+        "summary": "Create an ephemeral key"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteEphemeralKeysKey",
+        "path": "/v1/ephemeral_keys/{key}",
+        "required_path_params": [
+          "key"
+        ],
+        "summary": "Immediately invalidate an ephemeral key"
+      }
+    ],
+    "external_accounts": [
+      {
+        "method": "POST",
+        "operation_id": "PostExternalAccountsId",
+        "path": "/v1/external_accounts/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a bank account"
+      }
+    ],
+    "file_links": [
+      {
+        "method": "POST",
+        "operation_id": "PostFileLinks",
+        "path": "/v1/file_links",
+        "required_path_params": [],
+        "summary": "Create a file link"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostFileLinksLink",
+        "path": "/v1/file_links/{link}",
+        "required_path_params": [
+          "link"
+        ],
+        "summary": "Update a file link"
+      }
+    ],
+    "files": [
+      {
+        "method": "POST",
+        "operation_id": "PostFiles",
+        "path": "/v1/files",
+        "required_path_params": [],
+        "summary": "Create a file"
+      }
+    ],
+    "financial_connections": [
+      {
+        "method": "POST",
+        "operation_id": "PostFinancialConnectionsAccountsAccountDisconnect",
+        "path": "/v1/financial_connections/accounts/{account}/disconnect",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Disconnect an Account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostFinancialConnectionsAccountsAccountRefresh",
+        "path": "/v1/financial_connections/accounts/{account}/refresh",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Refresh Account data"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostFinancialConnectionsAccountsAccountSubscribe",
+        "path": "/v1/financial_connections/accounts/{account}/subscribe",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Subscribe to data refreshes for an Account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostFinancialConnectionsAccountsAccountUnsubscribe",
+        "path": "/v1/financial_connections/accounts/{account}/unsubscribe",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Unsubscribe from data refreshes for an Account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostFinancialConnectionsSessions",
+        "path": "/v1/financial_connections/sessions",
+        "required_path_params": [],
+        "summary": "Create a Session"
+      }
+    ],
+    "forwarding": [
+      {
+        "method": "POST",
+        "operation_id": "PostForwardingRequests",
+        "path": "/v1/forwarding/requests",
+        "required_path_params": [],
+        "summary": "Create a ForwardingRequest"
+      }
+    ],
+    "identity": [
+      {
+        "method": "POST",
+        "operation_id": "PostIdentityVerificationSessions",
+        "path": "/v1/identity/verification_sessions",
+        "required_path_params": [],
+        "summary": "Create a VerificationSession"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostIdentityVerificationSessionsSession",
+        "path": "/v1/identity/verification_sessions/{session}",
+        "required_path_params": [
+          "session"
+        ],
+        "summary": "Update a VerificationSession"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostIdentityVerificationSessionsSessionCancel",
+        "path": "/v1/identity/verification_sessions/{session}/cancel",
+        "required_path_params": [
+          "session"
+        ],
+        "summary": "Cancel a VerificationSession"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostIdentityVerificationSessionsSessionRedact",
+        "path": "/v1/identity/verification_sessions/{session}/redact",
+        "required_path_params": [
+          "session"
+        ],
+        "summary": "Redact a VerificationSession"
+      }
+    ],
+    "invoice_rendering_templates": [
+      {
+        "method": "POST",
+        "operation_id": "PostInvoiceRenderingTemplatesTemplateArchive",
+        "path": "/v1/invoice_rendering_templates/{template}/archive",
+        "required_path_params": [
+          "template"
+        ],
+        "summary": "Archive an invoice rendering template"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoiceRenderingTemplatesTemplateUnarchive",
+        "path": "/v1/invoice_rendering_templates/{template}/unarchive",
+        "required_path_params": [
+          "template"
+        ],
+        "summary": "Unarchive an invoice rendering template"
+      }
+    ],
+    "invoiceitems": [
+      {
+        "method": "POST",
+        "operation_id": "PostInvoiceitems",
+        "path": "/v1/invoiceitems",
+        "required_path_params": [],
+        "summary": "Create an invoice item"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteInvoiceitemsInvoiceitem",
+        "path": "/v1/invoiceitems/{invoiceitem}",
+        "required_path_params": [
+          "invoiceitem"
+        ],
+        "summary": "Delete an invoice item"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoiceitemsInvoiceitem",
+        "path": "/v1/invoiceitems/{invoiceitem}",
+        "required_path_params": [
+          "invoiceitem"
+        ],
+        "summary": "Update an invoice item"
+      }
+    ],
+    "invoices": [
+      {
+        "method": "POST",
+        "operation_id": "PostInvoices",
+        "path": "/v1/invoices",
+        "required_path_params": [],
+        "summary": "Create an invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesCreatePreview",
+        "path": "/v1/invoices/create_preview",
+        "required_path_params": [],
+        "summary": "Create a preview invoice"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteInvoicesInvoice",
+        "path": "/v1/invoices/{invoice}",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Delete a draft invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoice",
+        "path": "/v1/invoices/{invoice}",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Update an invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceAddLines",
+        "path": "/v1/invoices/{invoice}/add_lines",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Bulk add invoice line items"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceAttachPayment",
+        "path": "/v1/invoices/{invoice}/attach_payment",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Attach a payment to an Invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceFinalize",
+        "path": "/v1/invoices/{invoice}/finalize",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Finalize an invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceLinesLineItemId",
+        "path": "/v1/invoices/{invoice}/lines/{line_item_id}",
+        "required_path_params": [
+          "invoice",
+          "line_item_id"
+        ],
+        "summary": "Update an invoice's line item"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceMarkUncollectible",
+        "path": "/v1/invoices/{invoice}/mark_uncollectible",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Mark an invoice as uncollectible"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoicePay",
+        "path": "/v1/invoices/{invoice}/pay",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Pay an invoice"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceRemoveLines",
+        "path": "/v1/invoices/{invoice}/remove_lines",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Bulk remove invoice line items"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceSend",
+        "path": "/v1/invoices/{invoice}/send",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Send an invoice for manual payment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceUpdateLines",
+        "path": "/v1/invoices/{invoice}/update_lines",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Bulk update invoice line items"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostInvoicesInvoiceVoid",
+        "path": "/v1/invoices/{invoice}/void",
+        "required_path_params": [
+          "invoice"
+        ],
+        "summary": "Void an invoice"
+      }
+    ],
+    "link_account_sessions": [
+      {
+        "method": "POST",
+        "operation_id": "PostLinkAccountSessions",
+        "path": "/v1/link_account_sessions",
+        "required_path_params": [],
+        "summary": "Create a Session"
+      }
+    ],
+    "linked_accounts": [
+      {
+        "method": "POST",
+        "operation_id": "PostLinkedAccountsAccountDisconnect",
+        "path": "/v1/linked_accounts/{account}/disconnect",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Disconnect an Account"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostLinkedAccountsAccountRefresh",
+        "path": "/v1/linked_accounts/{account}/refresh",
+        "required_path_params": [
+          "account"
+        ],
+        "summary": "Refresh Account data"
+      }
+    ],
+    "payment_intents": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntents",
+        "path": "/v1/payment_intents",
+        "required_path_params": [],
+        "summary": "Create a PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntent",
+        "path": "/v1/payment_intents/{intent}",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Update a PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentApplyCustomerBalance",
+        "path": "/v1/payment_intents/{intent}/apply_customer_balance",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Reconcile a customer_balance PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentCancel",
+        "path": "/v1/payment_intents/{intent}/cancel",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Cancel a PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentCapture",
+        "path": "/v1/payment_intents/{intent}/capture",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Capture a PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentConfirm",
+        "path": "/v1/payment_intents/{intent}/confirm",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Confirm a PaymentIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentIncrementAuthorization",
+        "path": "/v1/payment_intents/{intent}/increment_authorization",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Increment an authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentIntentsIntentVerifyMicrodeposits",
+        "path": "/v1/payment_intents/{intent}/verify_microdeposits",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Verify microdeposits on a PaymentIntent"
+      }
+    ],
+    "payment_links": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentLinks",
+        "path": "/v1/payment_links",
+        "required_path_params": [],
+        "summary": "Create a payment link"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentLinksPaymentLink",
+        "path": "/v1/payment_links/{payment_link}",
+        "required_path_params": [
+          "payment_link"
+        ],
+        "summary": "Update a payment link"
+      }
+    ],
+    "payment_method_configurations": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodConfigurations",
+        "path": "/v1/payment_method_configurations",
+        "required_path_params": [],
+        "summary": "Create a payment method configuration"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodConfigurationsConfiguration",
+        "path": "/v1/payment_method_configurations/{configuration}",
+        "required_path_params": [
+          "configuration"
+        ],
+        "summary": "Update payment method configuration"
+      }
+    ],
+    "payment_method_domains": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodDomains",
+        "path": "/v1/payment_method_domains",
+        "required_path_params": [],
+        "summary": "Create a payment method domain"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodDomainsPaymentMethodDomain",
+        "path": "/v1/payment_method_domains/{payment_method_domain}",
+        "required_path_params": [
+          "payment_method_domain"
+        ],
+        "summary": "Update a payment method domain"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodDomainsPaymentMethodDomainValidate",
+        "path": "/v1/payment_method_domains/{payment_method_domain}/validate",
+        "required_path_params": [
+          "payment_method_domain"
+        ],
+        "summary": "Validate an existing payment method domain"
+      }
+    ],
+    "payment_methods": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethods",
+        "path": "/v1/payment_methods",
+        "required_path_params": [],
+        "summary": "Create a PaymentMethod"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodsPaymentMethod",
+        "path": "/v1/payment_methods/{payment_method}",
+        "required_path_params": [
+          "payment_method"
+        ],
+        "summary": "Update a PaymentMethod"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodsPaymentMethodAttach",
+        "path": "/v1/payment_methods/{payment_method}/attach",
+        "required_path_params": [
+          "payment_method"
+        ],
+        "summary": "Attach a PaymentMethod to a Customer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentMethodsPaymentMethodDetach",
+        "path": "/v1/payment_methods/{payment_method}/detach",
+        "required_path_params": [
+          "payment_method"
+        ],
+        "summary": "Detach a PaymentMethod from a Customer"
+      }
+    ],
+    "payment_records": [
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsReportPayment",
+        "path": "/v1/payment_records/report_payment",
+        "required_path_params": [],
+        "summary": "Report a payment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportPaymentAttempt",
+        "path": "/v1/payment_records/{id}/report_payment_attempt",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report a payment attempt"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportPaymentAttemptCanceled",
+        "path": "/v1/payment_records/{id}/report_payment_attempt_canceled",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report payment attempt canceled"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportPaymentAttemptFailed",
+        "path": "/v1/payment_records/{id}/report_payment_attempt_failed",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report payment attempt failed"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportPaymentAttemptGuaranteed",
+        "path": "/v1/payment_records/{id}/report_payment_attempt_guaranteed",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report payment attempt guaranteed"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportPaymentAttemptInformational",
+        "path": "/v1/payment_records/{id}/report_payment_attempt_informational",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report payment attempt informational"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPaymentRecordsIdReportRefund",
+        "path": "/v1/payment_records/{id}/report_refund",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Report a refund"
+      }
+    ],
+    "plans": [
+      {
+        "method": "POST",
+        "operation_id": "PostPlans",
+        "path": "/v1/plans",
+        "required_path_params": [],
+        "summary": "Create a plan"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeletePlansPlan",
+        "path": "/v1/plans/{plan}",
+        "required_path_params": [
+          "plan"
+        ],
+        "summary": "Delete a plan"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPlansPlan",
+        "path": "/v1/plans/{plan}",
+        "required_path_params": [
+          "plan"
+        ],
+        "summary": "Update a plan"
+      }
+    ],
+    "prices": [
+      {
+        "method": "POST",
+        "operation_id": "PostPrices",
+        "path": "/v1/prices",
+        "required_path_params": [],
+        "summary": "Create a price"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPricesPrice",
+        "path": "/v1/prices/{price}",
+        "required_path_params": [
+          "price"
+        ],
+        "summary": "Update a price"
+      }
+    ],
+    "products": [
+      {
+        "method": "POST",
+        "operation_id": "PostProducts",
+        "path": "/v1/products",
+        "required_path_params": [],
+        "summary": "Create a product"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteProductsId",
+        "path": "/v1/products/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Delete a product"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostProductsId",
+        "path": "/v1/products/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Update a product"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostProductsProductFeatures",
+        "path": "/v1/products/{product}/features",
+        "required_path_params": [
+          "product"
+        ],
+        "summary": "Attach a feature to a product"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteProductsProductFeaturesId",
+        "path": "/v1/products/{product}/features/{id}",
+        "required_path_params": [
+          "id",
+          "product"
+        ],
+        "summary": "Remove a feature from a product"
+      }
+    ],
+    "promotion_codes": [
+      {
+        "method": "POST",
+        "operation_id": "PostPromotionCodes",
+        "path": "/v1/promotion_codes",
+        "required_path_params": [],
+        "summary": "Create a promotion code"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostPromotionCodesPromotionCode",
+        "path": "/v1/promotion_codes/{promotion_code}",
+        "required_path_params": [
+          "promotion_code"
+        ],
+        "summary": "Update a promotion code"
+      }
+    ],
+    "quotes": [
+      {
+        "method": "POST",
+        "operation_id": "PostQuotes",
+        "path": "/v1/quotes",
+        "required_path_params": [],
+        "summary": "Create a quote"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostQuotesQuote",
+        "path": "/v1/quotes/{quote}",
+        "required_path_params": [
+          "quote"
+        ],
+        "summary": "Update a quote"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostQuotesQuoteAccept",
+        "path": "/v1/quotes/{quote}/accept",
+        "required_path_params": [
+          "quote"
+        ],
+        "summary": "Accept a quote"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostQuotesQuoteCancel",
+        "path": "/v1/quotes/{quote}/cancel",
+        "required_path_params": [
+          "quote"
+        ],
+        "summary": "Cancel a quote"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostQuotesQuoteFinalize",
+        "path": "/v1/quotes/{quote}/finalize",
+        "required_path_params": [
+          "quote"
+        ],
+        "summary": "Finalize a quote"
+      }
+    ],
+    "radar": [
+      {
+        "method": "POST",
+        "operation_id": "PostRadarPaymentEvaluations",
+        "path": "/v1/radar/payment_evaluations",
+        "required_path_params": [],
+        "summary": "Create a Payment Evaluation"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostRadarValueListItems",
+        "path": "/v1/radar/value_list_items",
+        "required_path_params": [],
+        "summary": "Create a value list item"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteRadarValueListItemsItem",
+        "path": "/v1/radar/value_list_items/{item}",
+        "required_path_params": [
+          "item"
+        ],
+        "summary": "Delete a value list item"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostRadarValueLists",
+        "path": "/v1/radar/value_lists",
+        "required_path_params": [],
+        "summary": "Create a value list"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteRadarValueListsValueList",
+        "path": "/v1/radar/value_lists/{value_list}",
+        "required_path_params": [
+          "value_list"
+        ],
+        "summary": "Delete a value list"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostRadarValueListsValueList",
+        "path": "/v1/radar/value_lists/{value_list}",
+        "required_path_params": [
+          "value_list"
+        ],
+        "summary": "Update a value list"
+      }
+    ],
+    "refunds": [
+      {
+        "method": "POST",
+        "operation_id": "PostRefunds",
+        "path": "/v1/refunds",
+        "required_path_params": [],
+        "summary": "Create a refund"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostRefundsRefund",
+        "path": "/v1/refunds/{refund}",
+        "required_path_params": [
+          "refund"
+        ],
+        "summary": "Update a refund"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostRefundsRefundCancel",
+        "path": "/v1/refunds/{refund}/cancel",
+        "required_path_params": [
+          "refund"
+        ],
+        "summary": "Cancel a refund"
+      }
+    ],
+    "reviews": [
+      {
+        "method": "POST",
+        "operation_id": "PostReviewsReviewApprove",
+        "path": "/v1/reviews/{review}/approve",
+        "required_path_params": [
+          "review"
+        ],
+        "summary": "Approve a review"
+      }
+    ],
+    "setup_intents": [
+      {
+        "method": "POST",
+        "operation_id": "PostSetupIntents",
+        "path": "/v1/setup_intents",
+        "required_path_params": [],
+        "summary": "Create a SetupIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSetupIntentsIntent",
+        "path": "/v1/setup_intents/{intent}",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Update a SetupIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSetupIntentsIntentCancel",
+        "path": "/v1/setup_intents/{intent}/cancel",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Cancel a SetupIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSetupIntentsIntentConfirm",
+        "path": "/v1/setup_intents/{intent}/confirm",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Confirm a SetupIntent"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSetupIntentsIntentVerifyMicrodeposits",
+        "path": "/v1/setup_intents/{intent}/verify_microdeposits",
+        "required_path_params": [
+          "intent"
+        ],
+        "summary": "Verify microdeposits on a SetupIntent"
+      }
+    ],
+    "shipping_rates": [
+      {
+        "method": "POST",
+        "operation_id": "PostShippingRates",
+        "path": "/v1/shipping_rates",
+        "required_path_params": [],
+        "summary": "Create a shipping rate"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostShippingRatesShippingRateToken",
+        "path": "/v1/shipping_rates/{shipping_rate_token}",
+        "required_path_params": [
+          "shipping_rate_token"
+        ],
+        "summary": "Update a shipping rate"
+      }
+    ],
+    "sources": [
+      {
+        "method": "POST",
+        "operation_id": "PostSources",
+        "path": "/v1/sources",
+        "required_path_params": [],
+        "summary": "Create a source"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSourcesSource",
+        "path": "/v1/sources/{source}",
+        "required_path_params": [
+          "source"
+        ],
+        "summary": "Update a source"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSourcesSourceVerify",
+        "path": "/v1/sources/{source}/verify",
+        "required_path_params": [
+          "source"
+        ],
+        "summary": ""
+      }
+    ],
+    "subscription_items": [
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionItems",
+        "path": "/v1/subscription_items",
+        "required_path_params": [],
+        "summary": "Create a subscription item"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteSubscriptionItemsItem",
+        "path": "/v1/subscription_items/{item}",
+        "required_path_params": [
+          "item"
+        ],
+        "summary": "Delete a subscription item"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionItemsItem",
+        "path": "/v1/subscription_items/{item}",
+        "required_path_params": [
+          "item"
+        ],
+        "summary": "Update a subscription item"
+      }
+    ],
+    "subscription_schedules": [
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionSchedules",
+        "path": "/v1/subscription_schedules",
+        "required_path_params": [],
+        "summary": "Create a schedule"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionSchedulesSchedule",
+        "path": "/v1/subscription_schedules/{schedule}",
+        "required_path_params": [
+          "schedule"
+        ],
+        "summary": "Update a schedule"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionSchedulesScheduleCancel",
+        "path": "/v1/subscription_schedules/{schedule}/cancel",
+        "required_path_params": [
+          "schedule"
+        ],
+        "summary": "Cancel a schedule"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionSchedulesScheduleRelease",
+        "path": "/v1/subscription_schedules/{schedule}/release",
+        "required_path_params": [
+          "schedule"
+        ],
+        "summary": "Release a schedule"
+      }
+    ],
+    "subscriptions": [
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptions",
+        "path": "/v1/subscriptions",
+        "required_path_params": [],
+        "summary": "Create a subscription"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteSubscriptionsSubscriptionExposedId",
+        "path": "/v1/subscriptions/{subscription_exposed_id}",
+        "required_path_params": [
+          "subscription_exposed_id"
+        ],
+        "summary": "Cancel a subscription"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionsSubscriptionExposedId",
+        "path": "/v1/subscriptions/{subscription_exposed_id}",
+        "required_path_params": [
+          "subscription_exposed_id"
+        ],
+        "summary": "Update a subscription"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteSubscriptionsSubscriptionExposedIdDiscount",
+        "path": "/v1/subscriptions/{subscription_exposed_id}/discount",
+        "required_path_params": [
+          "subscription_exposed_id"
+        ],
+        "summary": "Delete a subscription discount"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionsSubscriptionMigrate",
+        "path": "/v1/subscriptions/{subscription}/migrate",
+        "required_path_params": [
+          "subscription"
+        ],
+        "summary": "Migrate a subscription"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostSubscriptionsSubscriptionResume",
+        "path": "/v1/subscriptions/{subscription}/resume",
+        "required_path_params": [
+          "subscription"
+        ],
+        "summary": "Resume a subscription"
+      }
+    ],
+    "tax_ids": [
+      {
+        "method": "POST",
+        "operation_id": "PostTaxIds",
+        "path": "/v1/tax_ids",
+        "required_path_params": [],
+        "summary": "Create a tax ID"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteTaxIdsId",
+        "path": "/v1/tax_ids/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Delete a tax ID"
+      }
+    ],
+    "tax_rates": [
+      {
+        "method": "POST",
+        "operation_id": "PostTaxRates",
+        "path": "/v1/tax_rates",
+        "required_path_params": [],
+        "summary": "Create a tax rate"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTaxRatesTaxRate",
+        "path": "/v1/tax_rates/{tax_rate}",
+        "required_path_params": [
+          "tax_rate"
+        ],
+        "summary": "Update a tax rate"
+      }
+    ],
+    "test_helpers": [
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersConfirmationTokens",
+        "path": "/v1/test_helpers/confirmation_tokens",
+        "required_path_params": [],
+        "summary": "Create a test Confirmation Token"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersCustomersCustomerFundCashBalance",
+        "path": "/v1/test_helpers/customers/{customer}/fund_cash_balance",
+        "required_path_params": [
+          "customer"
+        ],
+        "summary": "Fund a test mode cash balance"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizations",
+        "path": "/v1/test_helpers/issuing/authorizations",
+        "required_path_params": [],
+        "summary": "Create a test-mode authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationCapture",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/capture",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Capture a test-mode authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationExpire",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/expire",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Expire a test-mode authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationFinalizeAmount",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/finalize_amount",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Finalize a test-mode authorization's amount"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationFraudChallengesRespond",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/fraud_challenges/respond",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Respond to fraud challenge"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationIncrement",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/increment",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Increment a test-mode authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingAuthorizationsAuthorizationReverse",
+        "path": "/v1/test_helpers/issuing/authorizations/{authorization}/reverse",
+        "required_path_params": [
+          "authorization"
+        ],
+        "summary": "Reverse a test-mode authorization"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingCardsCardShippingDeliver",
+        "path": "/v1/test_helpers/issuing/cards/{card}/shipping/deliver",
+        "required_path_params": [
+          "card"
+        ],
+        "summary": "Deliver a testmode card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingCardsCardShippingFail",
+        "path": "/v1/test_helpers/issuing/cards/{card}/shipping/fail",
+        "required_path_params": [
+          "card"
+        ],
+        "summary": "Fail a testmode card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingCardsCardShippingReturn",
+        "path": "/v1/test_helpers/issuing/cards/{card}/shipping/return",
+        "required_path_params": [
+          "card"
+        ],
+        "summary": "Return a testmode card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingCardsCardShippingShip",
+        "path": "/v1/test_helpers/issuing/cards/{card}/shipping/ship",
+        "required_path_params": [
+          "card"
+        ],
+        "summary": "Ship a testmode card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingCardsCardShippingSubmit",
+        "path": "/v1/test_helpers/issuing/cards/{card}/shipping/submit",
+        "required_path_params": [
+          "card"
+        ],
+        "summary": "Submit a testmode card"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingPersonalizationDesignsPersonalizationDesignActivate",
+        "path": "/v1/test_helpers/issuing/personalization_designs/{personalization_design}/activate",
+        "required_path_params": [
+          "personalization_design"
+        ],
+        "summary": "Activate a testmode personalization design"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingPersonalizationDesignsPersonalizationDesignDeactivate",
+        "path": "/v1/test_helpers/issuing/personalization_designs/{personalization_design}/deactivate",
+        "required_path_params": [
+          "personalization_design"
+        ],
+        "summary": "Deactivate a testmode personalization design"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingPersonalizationDesignsPersonalizationDesignReject",
+        "path": "/v1/test_helpers/issuing/personalization_designs/{personalization_design}/reject",
+        "required_path_params": [
+          "personalization_design"
+        ],
+        "summary": "Reject a testmode personalization design"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingSettlements",
+        "path": "/v1/test_helpers/issuing/settlements",
+        "required_path_params": [],
+        "summary": "Create a test-mode settlement"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingSettlementsSettlementComplete",
+        "path": "/v1/test_helpers/issuing/settlements/{settlement}/complete",
+        "required_path_params": [
+          "settlement"
+        ],
+        "summary": "Complete a test-mode settlement"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingTransactionsCreateForceCapture",
+        "path": "/v1/test_helpers/issuing/transactions/create_force_capture",
+        "required_path_params": [],
+        "summary": "Create a test-mode force capture"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingTransactionsCreateUnlinkedRefund",
+        "path": "/v1/test_helpers/issuing/transactions/create_unlinked_refund",
+        "required_path_params": [],
+        "summary": "Create a test-mode unlinked refund"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersIssuingTransactionsTransactionRefund",
+        "path": "/v1/test_helpers/issuing/transactions/{transaction}/refund",
+        "required_path_params": [
+          "transaction"
+        ],
+        "summary": "Refund a test-mode transaction"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersRefundsRefundExpire",
+        "path": "/v1/test_helpers/refunds/{refund}/expire",
+        "required_path_params": [
+          "refund"
+        ],
+        "summary": "Expire a pending refund."
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTerminalReadersReaderPresentPaymentMethod",
+        "path": "/v1/test_helpers/terminal/readers/{reader}/present_payment_method",
+        "required_path_params": [
+          "reader"
+        ],
+        "summary": "Simulate presenting a payment method"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTerminalReadersReaderSucceedInputCollection",
+        "path": "/v1/test_helpers/terminal/readers/{reader}/succeed_input_collection",
+        "required_path_params": [
+          "reader"
+        ],
+        "summary": "Simulate a successful input collection"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTerminalReadersReaderTimeoutInputCollection",
+        "path": "/v1/test_helpers/terminal/readers/{reader}/timeout_input_collection",
+        "required_path_params": [
+          "reader"
+        ],
+        "summary": "Simulate an input collection timeout"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTestClocks",
+        "path": "/v1/test_helpers/test_clocks",
+        "required_path_params": [],
+        "summary": "Create a test clock"
+      },
+      {
+        "method": "DELETE",
+        "operation_id": "DeleteTestHelpersTestClocksTestClock",
+        "path": "/v1/test_helpers/test_clocks/{test_clock}",
+        "required_path_params": [
+          "test_clock"
+        ],
+        "summary": "Delete a test clock"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTestClocksTestClockAdvance",
+        "path": "/v1/test_helpers/test_clocks/{test_clock}/advance",
+        "required_path_params": [
+          "test_clock"
+        ],
+        "summary": "Advance a test clock"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryInboundTransfersIdFail",
+        "path": "/v1/test_helpers/treasury/inbound_transfers/{id}/fail",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Fail an InboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryInboundTransfersIdReturn",
+        "path": "/v1/test_helpers/treasury/inbound_transfers/{id}/return",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Return an InboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryInboundTransfersIdSucceed",
+        "path": "/v1/test_helpers/treasury/inbound_transfers/{id}/succeed",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Succeed an InboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundPaymentsId",
+        "path": "/v1/test_helpers/treasury/outbound_payments/{id}",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Update an OutboundPayment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundPaymentsIdFail",
+        "path": "/v1/test_helpers/treasury/outbound_payments/{id}/fail",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Fail an OutboundPayment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundPaymentsIdPost",
+        "path": "/v1/test_helpers/treasury/outbound_payments/{id}/post",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Post an OutboundPayment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundPaymentsIdReturn",
+        "path": "/v1/test_helpers/treasury/outbound_payments/{id}/return",
+        "required_path_params": [
+          "id"
+        ],
+        "summary": "Test mode: Return an OutboundPayment"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundTransfersOutboundTransfer",
+        "path": "/v1/test_helpers/treasury/outbound_transfers/{outbound_transfer}",
+        "required_path_params": [
+          "outbound_transfer"
+        ],
+        "summary": "Test mode: Update an OutboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundTransfersOutboundTransferFail",
+        "path": "/v1/test_helpers/treasury/outbound_transfers/{outbound_transfer}/fail",
+        "required_path_params": [
+          "outbound_transfer"
+        ],
+        "summary": "Test mode: Fail an OutboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundTransfersOutboundTransferPost",
+        "path": "/v1/test_helpers/treasury/outbound_transfers/{outbound_transfer}/post",
+        "required_path_params": [
+          "outbound_transfer"
+        ],
+        "summary": "Test mode: Post an OutboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryOutboundTransfersOutboundTransferReturn",
+        "path": "/v1/test_helpers/treasury/outbound_transfers/{outbound_transfer}/return",
+        "required_path_params": [
+          "outbound_transfer"
+        ],
+        "summary": "Test mode: Return an OutboundTransfer"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryReceivedCredits",
+        "path": "/v1/test_helpers/treasury/received_credits",
+        "required_path_params": [],
+        "summary": "Test mode: Create a ReceivedCredit"
+      },
+      {
+        "method": "POST",
+        "operation_id": "PostTestHelpersTreasuryReceivedDebits",
+        "path": "/v1/test_helpers/treasury/received_debits",
+        "required_path_params": [],
+        "summary": "Test mode: Create a ReceivedDebit"
+      }
+    ],
+    "tokens": [
+      {
+        "method": "POST",
+        "operation_id": "PostTokens",
+        "path": "/v1/tokens",
+        "required_path_params": [],
+        "summary": "Create a bank account token"
+      }
+    ]
+  },
+  "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+}
