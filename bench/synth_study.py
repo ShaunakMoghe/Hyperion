@@ -84,6 +84,12 @@ def resource_of(system: str, path: str) -> str:
     return parts[0]
 
 
+def literal_segments(path: str) -> set[str]:
+    """Non-parameter path segments, minus the Stripe version prefix."""
+    return {p for p in path.split("/") if p and not p.startswith("{")
+            and p != "v1"}
+
+
 def build_context(system: str, method: str, path: str,
                   resources: dict) -> dict:
     resource = resource_of(system, path)
@@ -91,8 +97,16 @@ def build_context(system: str, method: str, path: str,
     operation = next(e for e in entries
                      if e["method"] == method and e["path"] == path)
     siblings = [e for e in entries if e != operation]
-    reads = [e for e in entries if e["method"] == "GET"]
-    inverses = [e for e in entries
+    # Candidate reads/inverses come from any resource sharing a literal
+    # segment with the target: a same-resource-only rule hides
+    # sub-resource inverses (DELETE /notes/{id} lives outside "deals"
+    # while notes.add lives inside it), making the task unpassable.
+    # For single-segment resources this reduces to the resource's own ops.
+    wanted = literal_segments(path)
+    pool = [e for ops in resources.values() for e in ops
+            if wanted & literal_segments(e["path"])]
+    reads = [e for e in pool if e["method"] == "GET"]
+    inverses = [e for e in pool
                 if e["method"] == "DELETE"
                 or (e["method"] == "POST"
                     and e["path"].rstrip("/").endswith("/cancel"))]

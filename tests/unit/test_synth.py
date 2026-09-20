@@ -126,10 +126,18 @@ def test_build_prompt_refilters_holdout_examples():
     assert "stripe.products.create" not in prompt  # hold-out (H-065)
 
 
+def test_build_prompt_pins_operation_id():
+    prompt = proposer.build_prompt("7ec", _context(), [],
+                                   operation_id="crm.notes.add")
+    assert "id must be exactly crm.notes.add." in prompt
+    prompt = proposer.build_prompt("7ec", _context(), [])
+    assert "id is <system>.<resource>.<verb>." in prompt
+
+
 def test_prompt_is_deterministic_and_versioned():
     a = proposer.build_prompt("7ec", _context(), [])
     b = proposer.build_prompt("7ec", _context(), [])
-    assert a == b and "prompt v1" in a
+    assert a == b and f"prompt {proposer.PROMPT_VERSION}" in a
 
 
 def test_holdout_excluded_from_examples(tmp_path):
@@ -301,6 +309,24 @@ def test_attempt_restores_before_image_fields():
     assert result["outcome"] == "verified_exact", result
     posts = [c for c in client.calls if c[0] == "POST"]
     assert posts[1][2] == {"name": "Pre"}
+
+
+def test_note_cleanup_falls_back_on_operation():
+    # Proposed specs sometimes misname the id (crm.deals.notes.create);
+    # fixtures must still be removed via the operation fallback.
+    client = _StubSystem({
+        ("DELETE", "/notes/n1"): (200, {}),
+        ("GET", "/deals/d1"): (200, {"id": "d1", "lead_id": "l1"}),
+        ("DELETE", "/deals/d1"): (200, {}),
+        ("DELETE", "/leads/l1"): (200, {}),
+    })
+    spec = {"id": "crm.deals.notes.create",
+            "operation": {"method": "POST",
+                          "path": "/deals/{deal_id}/notes"}}
+    notes = verifier._cleanup(client, spec, {"note_id": "n1"},
+                              {"deal_id": "d1"})
+    assert notes == []
+    assert len(client.calls) == 4
 
 
 def test_confirm_cleanup_cancels_open_intent_only():

@@ -1,0 +1,250 @@
+{
+  "tag": "bench-v1",
+  "records": [
+    {
+      "op": "stripe.products.create",
+      "seed": 7,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 344,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "781aaf4d912fb8550f31d82306593babf2f0da651c291c4c385f3dbaacccf7ee",
+        "prompt_tokens": 4136,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [
+        "schema: verify/compare/against: None is not one of ['before_image']"
+      ],
+      "loader": [
+        "schema: verify/compare/against: None is not one of ['before_image']"
+      ],
+      "pass": false,
+      "problems": [
+        "static: [\"schema: verify/compare/against: None is not one of ['before_image']\", \"schema: verify/compare/against: None is not one of ['before_image']\"]"
+      ]
+    },
+    {
+      "op": "stripe.products.create",
+      "seed": 42,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 341,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "00d50f57f19732dcc7af1c9f5c195f030841a1cfbc2cc87bc9eecab309f3750e",
+        "prompt_tokens": 4136,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "stripe.products.create",
+      "seed": 99,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 347,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "1dc05b7aaf0bf01f6ea7e6632aeed109cb948a9469d13516d5d95226f07305bb",
+        "prompt_tokens": 4136,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "stripe.coupons.create",
+      "seed": 7,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 351,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "8f960b6a43f6e41749189513c3cda9684b104438f46327365bc27236172a1c6e",
+        "prompt_tokens": 3979,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "stripe.coupons.create",
+      "seed": 42,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 351,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "afefb17ca43a27c0f701d57d587f342f5a42cd1c3600b0d406b9b464ebe98648",
+        "prompt_tokens": 3979,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "stripe.coupons.create",
+      "seed": 99,
+      "evidence": {
+        "cached": true,
+        "completion_tokens": 351,
+        "cost_usd": 0.0,
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "750382fc36239419b8652736ef634165a675ac80aad30a2bb98eefe7ab100d63",
+        "prompt_tokens": 3979,
+        "prompt_version": "v1",
+        "spec_commit": "7ec24599c27c862a0a27fd2c890b564edbd5f8d7"
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "crm.notes.add",
+      "seed": 7,
+      "evidence": {
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "0fc4068bd4a3ef8c4534e83f4bce5e03d84336f1c1adeb02f0c8d1a30e1dc498",
+        "prompt_version": "v1",
+        "prompt_tokens": 4068,
+        "completion_tokens": 354,
+        "cost_usd": 0.0,
+        "spec_commit": "crm-app",
+        "cached": false
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "crm.notes.add",
+      "seed": 42,
+      "evidence": {
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "85a799e89b407f84c8bf6fa0c5d387f482915807ecff1b21684977e14cacd7bc",
+        "prompt_version": "v1",
+        "prompt_tokens": 4068,
+        "completion_tokens": 369,
+        "cost_usd": 0.0,
+        "spec_commit": "crm-app",
+        "cached": false
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "state_mismatch",
+        "trials": [
+          "state_mismatch",
+          "state_mismatch"
+        ]
+      },
+      "pass": false,
+      "problems": [
+        "verify: state_mismatch"
+      ]
+    },
+    {
+      "op": "crm.notes.add",
+      "seed": 99,
+      "evidence": {
+        "model": "gemini-3.5-flash-lite",
+        "prompt_hash": "ea6de1984231e1ab366e20337b97d494edc298840a0e68451146d9cf86e22769",
+        "prompt_version": "v1",
+        "prompt_tokens": 4068,
+        "completion_tokens": 339,
+        "cost_usd": 0.0,
+        "spec_commit": "crm-app",
+        "cached": false
+      },
+      "static": [],
+      "loader": [],
+      "verify": {
+        "outcome": "verified_exact",
+        "trials": [
+          "verified_exact",
+          "verified_exact"
+        ]
+      },
+      "pass": true,
+      "problems": []
+    }
+  ],
+  "passed": 1,
+  "total": 9,
+  "budget": {
+    "calls": 3,
+    "tokens": 13266,
+    "spent_usd": 0.0
+  }
+}

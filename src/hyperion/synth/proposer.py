@@ -21,7 +21,7 @@ from hyperion.specs import loader
 
 from .llm import BudgetTracker, Provider
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 # Ground truth NEVER shown as few-shot examples (H-065).
 HOLDOUT_IDS = {
@@ -50,7 +50,7 @@ def operation_context(operation: dict, siblings: list[dict],
 
 
 def build_prompt(spec_version: str, context: dict,
-                 examples: list[dict]) -> str:
+                 examples: list[dict], operation_id: str | None = None) -> str:
     """Deterministic prompt; returns text (hash it for the log).
 
     Hold-out ids are re-filtered here (defense in depth): load_examples
@@ -67,6 +67,19 @@ def build_prompt(spec_version: str, context: dict,
         "before_image{read{method,path,params},fields}|produces[{name,from}]|"
         "inverse{operation,params,body_from_before_image}|"
         "verify{read,compare{fields,against}}|provenance.",
+        "spec_version is the integer 1.",
+    ]
+    if operation_id is not None:
+        lines.append(f"id must be exactly {operation_id}.")
+    else:
+        lines.append("id is <system>.<resource>.<verb>.")
+    lines += [
+        "compare.against is before_image (updates/deletes) or response "
+        "(creates), never null.",
+        "compare may add expect ONLY for terminal values the API itself "
+        "reports (example: a canceled intent reports status canceled). "
+        "For deletes, omit expect: absence (404/410) verifies the removal; "
+        "never guess tombstone shapes like deleted:true.",
         "Template roots allowed: $.args $.response $.produced $.before_image.",
         "effect_class/fidelity pairs allowed: read/exact, "
         "reversible/exact|equivalent, compensable/compensated, "
@@ -110,7 +123,8 @@ def propose(provider: Provider, model: str, spec_version: str,
             cache_dir: Path, spec_commit: str,
             budget: BudgetTracker) -> tuple[dict, dict]:
     """Return (spec, evidence). Cached; budget enforced before each call."""
-    prompt = build_prompt(spec_version, context, examples)
+    prompt = build_prompt(spec_version, context, examples,
+                          operation_id=operation_id)
     phash = prompt_hash(prompt)
     budget.check()  # refuse the API call when already exhausted
     path = cache_path(cache_dir, operation_id, spec_commit, model, phash)

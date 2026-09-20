@@ -194,7 +194,12 @@ def _cleanup(client, spec: dict, produced: dict, args: dict) -> list[str]:
                   or produced.get("payment_intent_id"))
         if intent is not None:
             _cancel_pi_if_open(client, intent, problems)
-    if spec_id == "crm.notes.add":
+    op = spec.get("operation", {})
+    if spec_id == "crm.notes.add" or (op.get("method"), op.get("path")) == (
+            "POST", "/deals/{deal_id}/notes"):
+        # The operation fallback catches proposed specs whose id is
+        # malformed (e.g. crm.deals.notes.create): fixtures must be
+        # removed even when the proposal misnames itself.
         _cleanup_crm_note(client, produced, args, problems)
     return problems
 
