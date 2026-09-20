@@ -174,7 +174,12 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
 
     # 1. Drift check: current state must match the recorded post-image.
     if call["post_image"] is not None:
-        current_post = _read_post(client, spec, args, produced)
+        try:
+            current_post = _read_post(client, spec, args, produced)
+        except Exception as e:
+            _finish_step(conn, step_id, "error", "error",
+                         evidence={"reason": f"drift read: {type(e).__name__}"})
+            return "error"
         if current_post is None or _canonical(current_post) != _canonical(
             call["post_image"]
         ):
@@ -220,7 +225,12 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
         return "error"
 
     # 3. Verify by re-reading.
-    outcome, fidelity = _verify(client, spec, args, produced, before)
+    try:
+        outcome, fidelity = _verify(client, spec, args, produced, before)
+    except Exception as e:
+        _finish_step(conn, step_id, "error", "error",
+                     evidence={"reason": f"verify read: {type(e).__name__}"})
+        return "error"
     if outcome in ("restored_exact", "restored_equivalent", "compensated"):
         _finish_step(conn, step_id, "done", outcome, fidelity,
                      evidence={"replay": replay} if replay else None)

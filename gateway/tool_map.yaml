@@ -1,0 +1,26 @@
+# Hyperion MCP gateway map (H-041).
+#
+# Upstream is the server actually implementing the tools. The gateway relays
+# every method untouched except mapped tools/call requests, which run through
+# the spec executor instead. Override path with HYPERION_TOOL_MAP.
+
+upstream:
+  command: ["python", "targets/crm/mcp_server.py"]
+  cwd: null
+  env: {}
+
+session:
+  # Ledger client label for the run created per gateway process (H-043).
+  client: "mcp-gateway"
+
+# Unknown (unmapped) tool policy: deny | hold | allow_logged.
+unknown: deny
+
+tools:
+  crm_create_lead: {system: crm, operation: leads.create}
+  crm_get_lead: {system: crm, operation: leads.read}
+  crm_update_lead: {system: crm, operation: leads.update}
+  crm_delete_lead: {system: crm, operation: leads.delete}
+  crm_create_deal: {system: crm, operation: deals.create}
+  crm_add_note: {system: crm, operation: notes.add}
+  crm_send_email: {system: crm, operation: emails.send}

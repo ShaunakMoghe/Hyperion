@@ -9,9 +9,12 @@ can actually be undone**.
 M0-M2 complete on branch `v2`: ledger with hash chain, versioned
 inverse-spec format, mini-CRM target, executor with irreversible hold queue,
 dependents-closure planner, and a persisted rollback state machine — all
-verified against real Postgres and the live CRM. Prior prototype tagged
-`v1-prototype` and preserved under `legacy/`. M3 (Stripe) waits on
-`STRIPE_TEST_KEY`; M6 (synthesis) waits on an LLM provider key.
+verified against real Postgres and the live CRM. M4 complete: MCP stdio
+gateway (frame relay + `tools/call` interception), demo CRM server, CLI
+(`rollback plan/run/resume`, `approve`/`deny`, `ledger verify`).
+Prior prototype tagged `v1-prototype` and preserved under `legacy/`.
+M3 (Stripe) waits on `STRIPE_TEST_KEY`; M6 (synthesis) waits on an LLM
+provider key.
 
 Working tasks use `poethepoet` (Windows-first, see
 `docs/decisions/001-windows-tooling.md`):

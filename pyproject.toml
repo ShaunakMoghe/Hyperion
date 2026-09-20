@@ -9,7 +9,8 @@ dependencies = [
   "pyyaml>=6", # inverse specs and policy files are YAML (H-011/H-014)
   "jsonschema>=4", # spec-schema validation (H-011)
   "fastapi>=0.111", # mini-CRM target app (H-013)
-  "httpx>=0.27", # ASGI test client + future Stripe client (H-013/H-030)
+  "httpx>=0.27", # TestClient transport + future Stripe client (H-013/H-030)
+  "mcp>=2.2", # demo MCP server + test client, v2 API (H-042/H-044)
 ]
 
 [dependency-groups]
@@ -52,6 +53,8 @@ select = ["E", "F", "I", "UP", "B"]
 up = "docker compose up -d"
 down = "docker compose down"
 test = "pytest"
-lint = "ruff check src tests"
+lint = "ruff check src tests targets"
+crm = "python targets/crm/app.py"
+gateway = "python -m hyperion.mcp_gateway.proxy"
 bench = "python -c \"raise SystemExit('benchmark not frozen until H-070; see bench/CHANGELOG.md')\""
 stripe-spec = "python -c \"raise SystemExit('stripe spec fetch not implemented until H-031')\""
