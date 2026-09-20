@@ -12,8 +12,10 @@ test-mode API.
 
 ## Status
 
-Active development on branch `v2` (M0–M6 done, M7 bench in progress).
-The earlier prototype is tagged `v1-prototype` and kept under `legacy/`.
+Working system on branch `v2`, benchmarked at the `bench-v1` tag:
+40/40 agent tasks with zero residual damage, synthesis 8/9 after one
+prompt iteration (see `docs/RESULTS.md`). The earlier prototype is
+tagged `v1-prototype` and kept under `legacy/`.
 
 What exists today:
 
@@ -32,7 +34,7 @@ What exists today:
 - LLM synthesis track: spec proposer (Gemini), static validator, and a
   live-execution verifier
 
-Test suite: 143 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
+Test suite: 149 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
 self-skip without keys).
 
 ## Quickstart
@@ -54,10 +56,12 @@ For the full picture, start with `docs/ARCHITECTURE.md`. For the
 
 ## Benchmarks
 
-The bench-v1 scenario set (40 tasks: 20 mini-CRM, 20 Stripe) is defined
-in `bench/scenarios/v1.yaml` and is awaiting its freeze tag. Once tagged,
-baselines land in `bench/baselines/` and get summarized in
-`docs/RESULTS.md`. Nothing is claimed until it has a number there.
+The bench-v1 scenario set (40 tasks: 20 mini-CRM, 20 Stripe, frozen at
+the `bench-v1` tag with hashes in `bench/scenarios/v1.freeze.json`)
+passes 40/40 with zero residual damage; the synthesis track grades
+8/9 hold-out specs by live execution. Raw runs live in
+`bench/baselines/`, the writeup (including the failure taxonomy) in
+`docs/RESULTS.md`. Nothing is claimed without a number there.
 
 ## Prior art
 
