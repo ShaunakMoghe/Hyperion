@@ -1,15 +1,15 @@
 {
   "bench": "bench-v1",
   "files": {
-    "bench/scenarios/v1.yaml": "9dadefbaa2d0b5b68b1db8843c111e3f827dadfc25e09c3a7cc02efb83777015",
+    "bench/scenarios/v1.yaml": "4d45e186b142355ebf740c2969b56df69504af22ba3c57d890d5bbfded5f59fd",
     "bench/policy.yaml": "eabd1f62c59658e51d5d456933154dcf56092721ea7f111b2c9a1c1ff53497cb",
     "bench/run.py": "ed50f40c39f2079c3ee51112dae00dddf4555efcf9569f7c00ed748630c513fe",
     "bench/synth_study.py": "38dfd31f83c5dd0b01a3f1393441115c576866555f968f2c09e47636a4c468cb",
     "studies/stripe/SPEC_VERSION": "03d0dad081665366f05aa325a1a6ca89e677e48f8fce3e3bb32d61030966ea13",
     "targets/crm/migrations/001_crm.up.sql": "e0516ae606134b1cf4e6dbda04eff8dce7b28e0c9bbadf7634a8d4f7d967f763",
-    "specs/*/*.yaml": "c2e0cc06bd3be23962671cedc6e3c204e9f41f53581edf6f90f6b8241c664cce"
+    "specs/*/*.yaml": "5a928507064add4b78a29f6a244dc235e84f01d282d05deddbb6036945528463"
   },
   "spec_files": 19,
   "scenarios": 40,
-  "git_commit": "a523f1a5deb783478c79652e4d33bd02852fb473"
+  "git_commit": "b191eed1c276bce2ea498c8eb4cac0d563da06cc"
 }
