@@ -80,6 +80,186 @@ def test_allow_logged_explicit_path_is_marked_unprotected(env):
     assert row["effect_class"] == "unknown"
 
 
+class _StubClient:
+    """Scripted client: (method, path) -> (code, body), exception, or a
+    list of those consumed in order across repeated calls."""
+
+    def __init__(self, script):
+        self.script = script
+
+    def request(self, method, path_template, args):
+        action = self.script[(method, path_template)]
+        if isinstance(action, list):
+            action = action.pop(0)
+        if isinstance(action, Exception):
+            raise action
+        return action
+
+
+def _widget_spec(**overrides):
+    spec = {
+        "spec_version": 1,
+        "id": "stub.widgets.create",
+        "system": "stub",
+        "operation": {"method": "POST", "path": "/widgets"},
+        "effect_class": "reversible",
+        "fidelity": "exact",
+        "before_image": None,
+        "produces": [{"name": "widget_id", "from": "$.response.id"}],
+        "inverse": {
+            "operation": {"method": "DELETE",
+                          "path": "/widgets/{id}"},
+            "params": {"id": "$.produced.widget_id"},
+            "body_from_before_image": [],
+        },
+        "verify": {
+            "read": {"method": "GET", "path": "/widgets",
+                     "params": {"id": "$.produced.widget_id"}},
+            "compare": {"fields": ["id"], "against": "response"},
+        },
+        "provenance": {},
+    }
+    spec.update(overrides)
+    return spec
+
+
+def _run_stub(env, spec, script, args=None, **kw):
+    conn, run_id = env["conn"], env["run_id"]
+    return executor.execute(
+        conn, run_id, "stub", "widgets.create",
+        {"name": "w"} if args is None else args,
+        specs={"stub.widgets.create": spec},
+        clients={"stub": _StubClient(script)}, **kw)
+
+
+def test_verify_error_body_not_stored_as_post_image(env):
+    # The forward effect stands (it happened); the error body must not be
+    # recorded as post state, so drift checks skip the missing post-image
+    # instead of comparing against garbage.
+    out = _run_stub(env, _widget_spec(), {
+        ("POST", "/widgets"): (201, {"id": "widget-1"}),
+        ("GET", "/widgets"): (500, {"error": "boom"}),
+    })
+    assert out["status"] == "executed"
+    row = store.get_call(env["conn"], out["call_id"])
+    assert row["post_image"] is None
+
+
+def _updating_spec(**overrides):
+    spec = _widget_spec(
+        before_image={"read": {"method": "GET", "path": "/widgets",
+                               "params": {"id": "$.args.id"}},
+                      "fields": ["name"]},
+        produces=[],
+        verify={"read": {"method": "GET", "path": "/widgets",
+                         "params": {"id": "$.args.id"}},
+                "compare": {"fields": ["name"], "against": "before_image"}},
+    )
+    spec.update(overrides)
+    return spec
+
+
+def test_before_image_spec_stores_field_subset(env):
+    # Drift baseline for before_image specs is the field subset, matching
+    # what rollback recomputes (shared projection, no false conflicts).
+    row_body = {"id": "widget-1", "name": "w", "extra": True}
+    out = _run_stub(env, _updating_spec(), {
+        ("GET", "/widgets"): [(200, dict(row_body)), (200, dict(row_body))],
+        ("POST", "/widgets"): (200, dict(row_body)),
+    }, args={"id": "widget-1", "name": "w"})
+    assert out["status"] == "executed"
+    row = store.get_call(env["conn"], out["call_id"])
+    assert row["before_image"] == {"name": "w"}
+    assert row["post_image"] == {"name": "w"}
+
+
+def test_tombstone_verify_projects_to_no_post_image(env):
+    # A 410 tombstone read is a legitimate post-state: the effect stands
+    # with no post-image rather than failing the forward call.
+    out = _run_stub(env, _updating_spec(), {
+        ("GET", "/widgets"): [(200, {"id": "widget-1", "name": "w"}),
+                              (410, {"detail": {"deleted": True}})],
+        ("POST", "/widgets"): (200, {"id": "widget-1"}),
+    }, args={"id": "widget-1", "name": "w"})
+    assert out["status"] == "executed"
+    row = store.get_call(env["conn"], out["call_id"])
+    assert row["post_image"] is None
+
+
+def test_verify_runs_without_produces(env):
+    spec = _widget_spec(
+        produces=[],
+        verify={"read": {"method": "GET", "path": "/widgets",
+                         "params": {"name": "$.args.name"}},
+                "compare": {"fields": ["name"], "against": "response"}},
+    )
+    out = _run_stub(env, spec, {
+        ("POST", "/widgets"): (201, {"id": "widget-1"}),
+        ("GET", "/widgets"): (200, {"id": "widget-1", "name": "w"}),
+    })
+    assert out["status"] == "executed"
+    row = store.get_call(env["conn"], out["call_id"])
+    assert row["post_image"] == {"id": "widget-1", "name": "w"}
+
+
+def test_verify_unresolvable_params_fails_call(env):
+    spec = _widget_spec(produces=[])  # verify refs $.produced: unresolvable
+    out = _run_stub(env, spec, {
+        ("POST", "/widgets"): (201, {"id": "widget-1"}),
+    })
+    assert out["status"] == "failed"
+    assert "verify params unresolvable" in out["reason"]
+
+
+def test_verify_transport_error_recorded_not_raised(env):
+    out = _run_stub(env, _widget_spec(), {
+        ("POST", "/widgets"): (201, {"id": "widget-1"}),
+        ("GET", "/widgets"): ConnectionError("down"),
+    })
+    assert out["status"] == "failed"
+    assert "verify read failed" in out["reason"]
+    assert "ConnectionError" in out["reason"]
+    assert store.get_call(env["conn"], out["call_id"])["status"] == "failed"
+
+
+def test_before_image_transport_error_recorded_not_raised(env):
+    spec = _widget_spec(
+        before_image={"read": {"method": "GET", "path": "/widgets",
+                               "params": {"name": "$.args.name"}},
+                      "fields": ["name"]},
+        verify=None,
+    )
+    out = _run_stub(env, spec, {
+        ("GET", "/widgets"): ConnectionError("down"),
+        ("POST", "/widgets"): (201, {"id": "widget-1"}),
+    })
+    assert out["status"] == "failed"
+    assert "before-image read failed" in out["reason"]
+
+
+def test_malformed_policy_dict_denied_not_raised(env):
+    conn, run_id, clients, specs = (env["conn"], env["run_id"],
+                                    env["clients"], env["specs"])
+    for bad in ({"rules": "nope"}, {"default": "bogus", "rules": []},
+                {"default": "allow", "rules": [{"match": {"system": "s"}}]}):
+        out = executor.execute(conn, run_id, "crm", "leads.create",
+                               {"name": "P"}, specs=specs, clients=clients,
+                               policy=bad)
+        assert out["status"] == "denied"
+        assert "invalid policy dict" in out["reason"]
+        assert store.get_call(conn, out["call_id"])["status"] == "blocked"
+
+
+@pytest.mark.parametrize("args", [0, "", [], "x", False])
+def test_non_dict_args_denied_not_raised(env, args):
+    conn, run_id, clients, specs = (env["conn"], env["run_id"],
+                                    env["clients"], env["specs"])
+    out = executor.execute(conn, run_id, "crm", "leads.create", args,
+                           specs=specs, clients=clients)
+    assert out["status"] == "denied"
+    assert "malformed args" in out["reason"]
+
+
 def test_irreversible_email_held_not_sent(env):
     conn, run_id, clients, specs = (env["conn"], env["run_id"],
                                     env["clients"], env["specs"])

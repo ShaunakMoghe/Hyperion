@@ -249,14 +249,19 @@ def _run_step(conn, step_id, call_id, clients, specs, step_hook) -> str:
 
 
 def _read_post(client, spec, args, produced):
+    """Recompute the recorded post-image via the shared projection.
+
+    Must mirror the executor's store rule exactly (before_image specs
+    project the field subset, others the full verify body, non-2xx/non-dict
+    projects to None); any skew surfaces as false drift conflicts.
+    """
     verify = spec.get("verify")
-    if verify and produced:
+    if verify:
         code, post = ex._read_state(client, verify["read"], args, produced)
-        return post if isinstance(post, dict) else None
+        return ex._project_post(spec, code, post)
     if spec.get("before_image"):
         code, post = ex._read_state(client, spec["before_image"]["read"], args)
-        if isinstance(post, dict):
-            return {f: post.get(f) for f in spec["before_image"]["fields"]}
+        return ex._project_post(spec, code, post)
     return None
 
 

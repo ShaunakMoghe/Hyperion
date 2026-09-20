@@ -7,8 +7,8 @@ import pytest
 
 from hyperion.ledger import db
 from hyperion.specs import loader
-from hyperion.systems.stripe_system import StripeSystemClient
 from hyperion.synth import verifier
+from hyperion.systems.stripe_system import StripeSystemClient
 
 pytestmark = pytest.mark.stripe
 

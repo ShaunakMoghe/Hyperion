@@ -16,7 +16,8 @@ import psycopg
 from hyperion.ledger import store
 from hyperion.specs import loader
 
-from . import approvals
+from . import approvals, provenance
+from . import policy as policy_mod
 from .clients import SystemClient
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -72,6 +73,24 @@ def _read_state(
     return client.request(read["method"], read["path"], params)
 
 
+def _project_post(spec: dict, code, body):
+    """Project a post-forward read into the stored post-image.
+
+    Shape contract (shared with rollback drift): specs with a before_image
+    store its field subset (the baseline rollback restores and compares);
+    other specs store the full verify body. Non-2xx or non-dict bodies
+    (a 410 tombstone, an error page) project to None instead of being
+    recorded as post state; the forward effect still stands with its
+    response, and drift checks skip a missing post-image.
+    """
+    if not (200 <= (code or 0) < 300) or not isinstance(body, dict):
+        return None
+    before = spec.get("before_image")
+    if before:
+        return {f: body.get(f) for f in before["fields"]}
+    return body
+
+
 def _parse_explicit(operation: str) -> tuple[str, str] | None:
     parts = operation.split(None, 1)
     if len(parts) == 2 and parts[0].upper() in (
@@ -93,10 +112,31 @@ def execute(
     unknown: str = "deny",
     declared_deps: list[str] | None = None,
     idempotency_key: str | None = None,
+    policy_path: str | None = None,
+    policy: dict | None = None,
+    auto_provenance: bool = True,
 ) -> dict:
-    """Run one tool call through spec lookup, before-image, forward, ledger."""
-    args = args or {}
+    """Run one tool call through policy, spec lookup, before-image, forward.
+
+    Fail-closed: unknown ops are denied/held; policy load/eval failures deny;
+    missing template values, missing produced ids, and transport errors fail
+    the call with a recorded reason.
+    """
+    if args is None:
+        args = {}
+    if not isinstance(args, dict):
+        # Fail closed before policy/spec lookup: non-dict args would crash
+        # path filling or argument resolution downstream.
+        out = _blocked(conn, run_id, system, operation, args,
+                       "malformed args (not a mapping)")
+        out["status"] = "denied"
+        return out
     specs = specs or load_specs()
+    if policy_path is not None or policy is not None:
+        gated = _apply_policy(conn, run_id, system, operation, args,
+                              policy_path, policy, specs, declared_deps)
+        if gated is not None:
+            return gated
     spec_id = f"{system}.{operation}"
     spec = specs.get(spec_id)
     if spec is None:
@@ -117,7 +157,53 @@ def execute(
     return _run_forward(
         conn, run_id, system, operation, args, spec, spec_id,
         clients or {}, declared_deps, idempotency_key,
+        auto_provenance=auto_provenance, all_specs=specs,
     )
+
+
+def _apply_policy(conn, run_id, system, operation, args, policy_path,
+                  policy, specs, declared_deps) -> dict | None:
+    """Policy gate. Returns a result when the call is decided (deny/hold),
+    or None to proceed to spec lookup."""
+    if policy is None:
+        assert policy_path is not None
+        policy, error = policy_mod.load_policy(policy_path)
+        if error is not None:
+            out = _blocked(conn, run_id, system, operation, args,
+                           f"policy: {error}")
+            out["status"] = "denied"
+            return out
+    else:
+        # Caller-supplied dicts skip load_policy; validate them here so a
+        # malformed dict decides DENY instead of raising out of decide().
+        error = policy_mod.validate_policy(policy)
+        if error is not None:
+            out = _blocked(conn, run_id, system, operation, args,
+                           f"policy: invalid policy dict: {error}")
+            out["status"] = "denied"
+            return out
+    decision, why = policy_mod.decide(policy, system, operation, args)
+    if decision == policy_mod.DENY:
+        out = _blocked(conn, run_id, system, operation, args,
+                       f"policy denied: {why}")
+        out["status"] = "denied"
+        return out
+    if decision == policy_mod.REQUIRE_APPROVAL:
+        spec = specs.get(f"{system}.{operation}")
+        if spec is not None:
+            effect, fidelity = (spec["effect_class"], spec["fidelity"])
+            sid, shash = f"{system}.{operation}", spec_hash(spec)
+        else:
+            effect, fidelity, sid, shash = "unknown", "none", None, None
+        out = approvals.hold_call(
+            conn, run_id, system=system, operation=operation, args=args,
+            effect_class=effect, fidelity_expected=fidelity,
+            spec_id=sid, spec_hash=shash,
+            reason=f"policy: require_approval ({why})",
+        )
+        _link_deps(conn, {"id": out["call_id"]}, declared_deps)
+        return out
+    return None
 
 
 def _unknown(conn, run_id, system, operation, args, unknown: str,
@@ -181,7 +267,8 @@ def _forward(
 
 def _run_forward(
     conn, run_id, system, operation, args, spec, spec_id, clients,
-    declared_deps, idempotency_key,
+    declared_deps, idempotency_key, finalize_call=None,
+    auto_provenance=True, all_specs=None,
 ) -> dict:
     client = clients.get(system)
     if client is None:
@@ -202,13 +289,20 @@ def _run_forward(
             return _record_failure(
                 conn, run_id, system, operation, args, spec, spec_id,
                 f"before-image params unresolvable: {e}", declared_deps,
-                idempotency_key,
+                idempotency_key, finalize_call=finalize_call,
+            )
+        except Exception as e:  # transport error before forward: record it
+            return _record_failure(
+                conn, run_id, system, operation, args, spec, spec_id,
+                f"before-image read failed "
+                f"(transport {type(e).__name__}: {e})", declared_deps,
+                idempotency_key, finalize_call=finalize_call,
             )
         if not (200 <= (code or 0) < 300) or not isinstance(body, dict):
             return _record_failure(
                 conn, run_id, system, operation, args, spec, spec_id,
                 f"before-image read failed (status {code})", declared_deps,
-                idempotency_key,
+                idempotency_key, finalize_call=finalize_call,
             )
         before_image = {f: body.get(f) for f in spec["before_image"]["fields"]}
 
@@ -218,18 +312,21 @@ def _run_forward(
         return _record_failure(
             conn, run_id, system, operation, args, spec, spec_id,
             f"path params unresolvable: {e}", declared_deps, idempotency_key,
+            finalize_call=finalize_call,
         )
     except Exception as e:  # transport error: record, never swallow silently
         return _record_failure(
             conn, run_id, system, operation, args, spec, spec_id,
             f"transport error: {type(e).__name__}: {e}", declared_deps,
             idempotency_key, before_image=before_image,
+            finalize_call=finalize_call,
         )
     if outcome == "failed" or not isinstance(body, dict):
         return _record_failure(
             conn, run_id, system, operation, args, spec, spec_id,
             f"forward call failed (status {code})", declared_deps,
             idempotency_key, before_image=before_image, response=body,
+            finalize_call=finalize_call,
         )
 
     produced: dict = {}
@@ -241,36 +338,84 @@ def _run_forward(
             conn, run_id, system, operation, args, spec, spec_id,
             f"produced id missing in response: {e}", declared_deps,
             idempotency_key, before_image=before_image, response=body,
+            finalize_call=finalize_call,
         )
 
     post_image = None
     verify = spec.get("verify")
-    if verify and produced:
-        code, post = _read_state(client, verify["read"], args, produced)
-        if isinstance(post, dict):
-            post_image = post
+    if verify:
+        # Verify whenever the spec declares it, even with no produces: an
+        # unresolvable verify read or a transport error fails the call
+        # (fail closed), while a non-2xx/non-dict body projects to no
+        # post-image instead of recording an error body as post state.
+        try:
+            code, post = _read_state(client, verify["read"], args, produced)
+        except KeyError as e:
+            return _record_failure(
+                conn, run_id, system, operation, args, spec, spec_id,
+                f"verify params unresolvable: {e}", declared_deps,
+                idempotency_key, before_image=before_image, response=body,
+                finalize_call=finalize_call,
+            )
+        except Exception as e:  # transport error after forward: record it
+            return _record_failure(
+                conn, run_id, system, operation, args, spec, spec_id,
+                f"verify read failed ({type(e).__name__}: {e})",
+                declared_deps, idempotency_key, before_image=before_image,
+                response=body, finalize_call=finalize_call,
+            )
+        post_image = _project_post(spec, code, post)
     elif before_image is not None:
-        code, post = _read_state(client, spec["before_image"]["read"], args)
-        if isinstance(post, dict):
-            post_image = {f: post.get(f) for f in spec["before_image"]["fields"]}
+        try:
+            code, post = _read_state(
+                client, spec["before_image"]["read"], args, None
+            )
+        except KeyError as e:
+            return _record_failure(
+                conn, run_id, system, operation, args, spec, spec_id,
+                f"post-image params unresolvable: {e}", declared_deps,
+                idempotency_key, before_image=before_image, response=body,
+                finalize_call=finalize_call,
+            )
+        except Exception as e:  # transport error after forward: record it
+            return _record_failure(
+                conn, run_id, system, operation, args, spec, spec_id,
+                f"post-image read failed ({type(e).__name__}: {e})",
+                declared_deps, idempotency_key, before_image=before_image,
+                response=body, finalize_call=finalize_call,
+            )
+        post_image = _project_post(spec, code, post)
 
-    call = store.append_call(
-        conn, run_id, system=system, operation=operation, args=args,
-        effect_class=spec["effect_class"],
-        fidelity_expected=spec["fidelity"], status="executed",
-        before_image=before_image, response=body, post_image=post_image,
-        spec_id=spec_id, spec_hash=spec_hash(spec),
-        idempotency_key=idempotency_key,
-    )
-    _link_deps(conn, call, declared_deps)
-    return {"status": "executed", "call_id": str(call["id"]),
+    if finalize_call is not None:
+        _fill_execution(conn, finalize_call, before_image, body, post_image)
+        call_id = str(finalize_call["id"])
+    else:
+        call = store.append_call(
+            conn, run_id, system=system, operation=operation, args=args,
+            effect_class=spec["effect_class"],
+            fidelity_expected=spec["fidelity"], status="executed",
+            before_image=before_image, response=body, post_image=post_image,
+            spec_id=spec_id, spec_hash=spec_hash(spec),
+            idempotency_key=idempotency_key,
+        )
+        call_id = str(call["id"])
+        _link_deps(conn, call, declared_deps)
+    if auto_provenance and all_specs is not None:
+        provenance.link_call(conn, run_id, call_id, all_specs)
+    return {"status": "executed", "call_id": call_id,
             "response": body, "produced": produced}
 
 
 def _record_failure(
     conn, run_id, system, operation, args, spec, spec_id, reason,
     declared_deps, idempotency_key, before_image=None, response=None,
+    finalize_call=None,
 ) -> dict:
+    if finalize_call is not None:
+        # The held row keeps its hash (status is not hashed); only flip it.
+        store.update_status(conn, str(finalize_call["id"]), "failed")
+        return {"status": "failed", "call_id": str(finalize_call["id"]),
+                "reason": reason}
     call = store.append_call(
         conn, run_id, system=system, operation=operation, args=args,
         effect_class=spec["effect_class"], fidelity_expected=spec["fidelity"],
@@ -295,10 +440,13 @@ def approve_and_execute(
     decided_by: str,
     specs: dict[str, dict] | None,
     clients: dict[str, SystemClient],
+    auto_provenance: bool = True,
 ) -> dict:
     """Approve a held call and execute it exactly once.
 
-    Double-approve returns already_executed without re-sending.
+    Works for irreversible holds (no images) and policy-held reversible
+    calls (full before-image/forward/post-image path, finalized into the
+    held row). Double-approve returns already_executed without re-sending.
     """
     decision = approvals.decide(conn, call_id, True, decided_by)
     if decision["status"] == "already_decided":
@@ -316,9 +464,23 @@ def approve_and_execute(
     specs = specs or load_specs()
     spec_id = f"{call['system']}.{call['operation']}"
     spec = specs.get(spec_id)
-    if spec is None or spec["effect_class"] != "irreversible":
+    if spec is None:
         store.update_status(conn, call_id, "blocked")
-        return {"status": "error", "reason": "held call has no irreversible spec"}
+        return {"status": "error", "reason": "held call has no spec"}
+    if spec["effect_class"] == "irreversible":
+        return _approve_irreversible(conn, call, spec, clients,
+                                     auto_provenance, specs)
+    return _run_forward(
+        conn, str(call["run_id"]), call["system"], call["operation"],
+        call["args"] or {}, spec, spec_id, clients, None, None,
+        finalize_call=call, auto_provenance=auto_provenance,
+        all_specs=specs,
+    )
+
+
+def _approve_irreversible(conn, call, spec, clients, auto_provenance,
+                          specs) -> dict:
+    call_id = str(call["id"])
     client = clients.get(call["system"])
     if client is None:
         return {"status": "error",
@@ -336,11 +498,14 @@ def approve_and_execute(
         store.update_status(conn, call_id, "failed")
         return {"status": "failed", "call_id": call_id,
                 "reason": f"forward call failed (status {code})"}
-    _finalize_held_execution(conn, call, body)
+    _fill_execution(conn, call, None, body, None)
+    if auto_provenance:
+        provenance.link_call(conn, str(call["run_id"]), call_id, specs)
     return {"status": "executed", "call_id": call_id, "response": body}
 
 
-def _finalize_held_execution(conn, call, response: dict) -> None:
+def _fill_execution(conn, call, before_image, response: dict,
+                    post_image) -> None:
     """Fill a held row's execution data and recompute its chain hash.
 
     Refuses when a later row already chains off the old hash (fail closed);
@@ -354,9 +519,12 @@ def _finalize_held_execution(conn, call, response: dict) -> None:
         raise RuntimeError(
             f"cannot execute held call {call_id}: chained rows exist")
     conn.execute(
-        "UPDATE calls SET status = 'executed', response = %s, "
-        "finished_at = now() WHERE id = %s",
-        (json.dumps(response), call_id),
+        "UPDATE calls SET status = 'executed', before_image = %s, "
+        "response = %s, post_image = %s, finished_at = now() WHERE id = %s",
+        (json.dumps(before_image) if before_image is not None else None,
+         json.dumps(response),
+         json.dumps(post_image) if post_image is not None else None,
+         call_id),
     )
     fresh = store.get_call(conn, call_id)
     new_hash = store._hash(fresh["prev_hash"], store._payload_of(fresh))
