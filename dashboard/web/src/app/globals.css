@@ -3,10 +3,11 @@
 :root {
   --ink: #ffffff;
   --ink-dim: #a3a3a3;
-  --ink-faint: #636363;
+  --ink-faint: #6e6e6e;
   --bg: #000000;
-  --panel: #0a0a0a;
-  --line: #1f1f1f;
+  --panel: #0c0c0c;
+  --hover: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.1);
   --ok: #10b981;
   --wait: #f59e0b;
   --bad: #ef4444;

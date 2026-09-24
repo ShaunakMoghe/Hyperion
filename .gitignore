@@ -17,3 +17,7 @@ bench/cache/
 
 # Private demo recording script (see DEMO_SCRIPT.md)
 DEMO_SCRIPT.md
+
+# Third-party reference files, never commit
+SpaceXAI.html
+SpaceXAI_files/

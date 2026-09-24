@@ -89,7 +89,7 @@ export default function RunsPage() {
           </thead>
           <tbody>
             {runs.map((run) => (
-              <tr key={run.id} className="border-b border-[var(--line)] hover:bg-white/[0.02]">
+              <tr key={run.id} className="border-b border-[var(--line)] hover:bg-[var(--hover)]">
                 <td className="py-3 pr-4">
                   <Link
                     href={`/runs/${run.id}`}
