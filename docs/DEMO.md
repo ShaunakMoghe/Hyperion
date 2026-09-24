@@ -24,21 +24,12 @@ poe dashboard-web
 poe dashboard-seed
 ```
 
-Open http://localhost:3000 in a browser, click the `dashboard-demo`
-run. The script:
-
-| Beat | Do | Say |
-|------|----|-----|
-| 0:00 | Runs list → open the demo run | "Every agent action lands in a Postgres ledger — this is one run, seven calls." |
-| 0:15 | Point at the graph: green chain, amber holds, red denial | "Four executed, two held for approval, one denied by policy. The denied delete never touched the CRM." |
-| 0:30 | Click the amber email node | "The email is irreversible, so it's held — full args and the reason are right here." |
-| 0:40 | Approvals → approve the big deal | "A human approves, the call executes exactly once." |
-| 0:55 | Roll back run (the button asks once — it unwinds the whole run) | "And everything reversible unwinds in dependency order — watch the nodes go gray." |
-| 1:10 | Export audit JSON | "The whole run — policy hash, chain verdict, every decision — exports as one artifact." |
-
-Tips for the recording: seed a fresh run right before you start (the
-"started" timestamp reads as live), and approve — don't deny — the big
-deal, so the rollback has five calls to unwind instead of four.
+Open http://localhost:3000 in a browser and click the `dashboard-demo`
+run. It contains an executed call chain, two held approvals, and one
+policy denial — enough to exercise every view: click a graph node for
+its detail panel, approve or deny from the queue, roll the run back
+(the button confirms once, since it unwinds the whole run), and export
+the audit JSON.
 
 ## Gateway + mini-CRM through a real MCP client
 
