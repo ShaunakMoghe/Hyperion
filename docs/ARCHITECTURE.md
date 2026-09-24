@@ -16,6 +16,7 @@ src/hyperion/ledger/                    Postgres run/event ledger (db, store)
 src/hyperion/executor/                  executor, approvals, rollback plan+exec,
                                         provenance, policy
 src/hyperion/mcp_gateway/               stdio frame-relay proxy + tool_map.yaml
+src/hyperion/dashboard/ + dashboard/    FastAPI API + Next.js app + demo seed
 src/hyperion/systems/                   Stripe test-mode client + system adapter
 src/hyperion/synth/                     LLM proposer, safety filter, validator, verifier
 targets/crm/                            mini-CRM (FastAPI + Postgres) + MCP demo server
@@ -94,6 +95,10 @@ produce server-generated ids from `$.response`.
   routes mapped `tools/call` requests through the spec executor with
   ledgering. The demo server (`targets/crm/mcp_server.py`) plus
   `docs/DEMO.md` show it working from Claude Desktop.
+- **Dashboard** (`src/hyperion/dashboard/app.py`, `dashboard/web/`): a read/execute API
+  over the ledger (runs, SSE snapshots, rollback, approvals, audit
+  export) plus a Next.js app with a live execution graph. Boots its own
+  embedded CRM, so `poe dashboard` is self-contained.
 
 ## Evaluation
 

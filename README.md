@@ -12,10 +12,10 @@ test-mode API.
 
 ## Status
 
-Working system on branch `v2`, benchmarked at the `bench-v1` tag:
-40/40 agent tasks with zero residual damage, synthesis 8/9 after one
-prompt iteration (see `docs/RESULTS.md`). The earlier prototype is
-tagged `v1-prototype` and kept under `legacy/`.
+Working system on `main`, benchmarked at the `bench-v1` tag: 40/40
+agent tasks with zero residual damage, synthesis 8/9 after one prompt
+iteration (see `docs/RESULTS.md`). The earlier prototype is tagged
+`v1-prototype` and kept under `legacy/`.
 
 What exists today:
 
@@ -33,8 +33,11 @@ What exists today:
   live end-to-end with rollback and cleanup
 - LLM synthesis track: spec proposer (Gemini), static validator, and a
   live-execution verifier
+- Dashboard: FastAPI read/execute API plus a Next.js app — run list,
+  live execution graph over SSE, approvals queue, one-click rollback,
+  audit export (`docs/DEMO.md`)
 
-Test suite: 149 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
+Test suite: 178 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
 self-skip without keys).
 
 ## Quickstart
@@ -45,6 +48,8 @@ Windows-first; tasks use `poethepoet` (see
 - `uv run poe up` — start Postgres 16
 - `uv run poe test` — run the suite
 - `uv run poe lint` — ruff check
+- `uv run poe dashboard` + `poe dashboard-web` — dashboard API and app
+  (see `docs/DEMO.md` for the 90-second script)
 
 Copy `.env.example` to `.env` for local runs. Stripe paths only accept
 test keys (`sk_test_` / `rk_test_`), and the LLM track needs

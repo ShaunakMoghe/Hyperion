@@ -51,6 +51,111 @@ def get_run(conn: psycopg.Connection, run_id: str) -> dict:
     return dict(row)
 
 
+def list_runs(conn: psycopg.Connection, limit: int = 20) -> list[dict]:
+    """Recent runs, newest first, with call counts + status breakdown (M10)."""
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        rows = conn.execute(
+            """SELECT r.id, r.client, r.started_at, r.meta,
+                      (SELECT COUNT(*) FROM calls c
+                        WHERE c.run_id = r.id) AS calls,
+                      (SELECT jsonb_object_agg(s.status, s.n)
+                         FROM (SELECT status, COUNT(*) AS n FROM calls c
+                               WHERE c.run_id = r.id GROUP BY status) s
+                      ) AS by_status
+               FROM runs r ORDER BY r.started_at DESC LIMIT %s""",
+            (limit,),
+        ).fetchall()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    return [
+        {"id": str(r["id"]), "client": r["client"],
+         "started_at": r["started_at"], "meta": r["meta"],
+         "calls": r["calls"], "by_status": r["by_status"] or {}}
+        for r in (dict(r) for r in rows)
+    ]
+
+
+def list_calls(conn: psycopg.Connection, run_id: str) -> list[dict]:
+    """Every call of a run in seq order (M10)."""
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        rows = conn.execute(
+            "SELECT * FROM calls WHERE run_id = %s ORDER BY seq",
+            (run_id,),
+        ).fetchall()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    return [dict(r) for r in rows]
+
+
+def list_edges(conn: psycopg.Connection, run_id: str) -> list[dict]:
+    """Provenance/declared edges between a run's calls (M10)."""
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        rows = conn.execute(
+            """SELECT e.call_id, e.depends_on_call_id, e.kind
+               FROM edges e JOIN calls c ON c.id = e.call_id
+               WHERE c.run_id = %s""",
+            (run_id,),
+        ).fetchall()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    return [{"call_id": str(r["call_id"]),
+             "depends_on_call_id": str(r["depends_on_call_id"]),
+             "kind": r["kind"]} for r in (dict(r) for r in rows)]
+
+
+def list_rollbacks(conn: psycopg.Connection, run_id: str) -> list[dict]:
+    """Rollbacks of a run with their steps, newest first (M10)."""
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        rb_rows = conn.execute(
+            """SELECT id, status, started_at, finished_at FROM rollbacks
+               WHERE run_id = %s ORDER BY started_at DESC""",
+            (run_id,),
+        ).fetchall()
+        out = []
+        for rb in (dict(r) for r in rb_rows):
+            steps = conn.execute(
+                """SELECT call_id, status, outcome, fidelity_achieved
+                   FROM rollback_steps WHERE rollback_id = %s""",
+                (str(rb["id"]),),
+            ).fetchall()
+            out.append({
+                "id": str(rb["id"]),
+                "status": rb["status"],
+                "started_at": rb["started_at"],
+                "finished_at": rb["finished_at"],
+                "steps": [{
+                    "call_id": str(s["call_id"]),
+                    "status": s["status"],
+                    "outcome": s["outcome"],
+                    "fidelity_achieved": s["fidelity_achieved"],
+                } for s in (dict(s) for s in steps)],
+            })
+        return out
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+
+
+def list_approvals(conn: psycopg.Connection, run_id: str) -> list[dict]:
+    """Approval rows for a run's calls in seq order (M10)."""
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        rows = conn.execute(
+            """SELECT a.call_id, a.status, a.decided_by, a.decided_at
+               FROM approvals a JOIN calls c ON c.id = a.call_id
+               WHERE c.run_id = %s ORDER BY c.seq""",
+            (run_id,),
+        ).fetchall()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    return [{"call_id": str(r["call_id"]), "status": r["status"],
+             "decided_by": r["decided_by"], "decided_at": r["decided_at"]}
+            for r in (dict(r) for r in rows)]
+
+
 def stamp_policy(conn: psycopg.Connection, run_id: str, policy_sha256: str) -> None:
     """Record the governing policy's sha256 in the run's meta (M9).
 

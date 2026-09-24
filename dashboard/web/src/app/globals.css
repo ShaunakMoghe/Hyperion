@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #ffffff;
+  --ink-dim: #a3a3a3;
+  --ink-faint: #636363;
+  --bg: #000000;
+  --panel: #0a0a0a;
+  --line: #1f1f1f;
+  --ok: #10b981;
+  --wait: #f59e0b;
+  --bad: #ef4444;
+  --muted-node: #525252;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+.micro-label {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+a, button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
