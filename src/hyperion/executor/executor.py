@@ -251,6 +251,7 @@ def _blocked(conn, run_id, system, operation, args, reason: str) -> dict:
     call = store.append_call(
         conn, run_id, system=system, operation=operation, args=args,
         effect_class="unknown", fidelity_expected="none", status="blocked",
+        decision_reason=reason,
     )
     return {"status": "denied", "call_id": str(call["id"]), "reason": reason}
 

@@ -21,11 +21,11 @@ def test_migrations_round_trip():
     try:
         db.migrate_down(conn)  # normalize: start from a clean slate
         assert db.applied_versions(conn) == []
-        assert db.migrate_up(conn) == [1]
-        assert db.applied_versions(conn) == [1]
-        assert db.migrate_down(conn) == [1]
+        assert db.migrate_up(conn) == [1, 2]
+        assert db.applied_versions(conn) == [1, 2]
+        assert db.migrate_down(conn) == [2, 1]
         assert db.applied_versions(conn) == []
-        assert db.migrate_up(conn) == [1]
+        assert db.migrate_up(conn) == [1, 2]
     finally:
         conn.close()
 

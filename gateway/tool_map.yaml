@@ -16,6 +16,12 @@ session:
 # Unknown (unmapped) tool policy: deny | hold | allow_logged.
 unknown: deny
 
+# Policy file gating every intercepted call (M9): allow | deny |
+# require_approval per tool, with `when` conditions on args. Relative
+# paths resolve against the repo root. HYPERION_POLICY overrides this
+# per run. Omit to run ungoverned (not recommended).
+policy: gateway/policy.yaml
+
 tools:
   crm_create_lead: {system: crm, operation: leads.create}
   crm_get_lead: {system: crm, operation: leads.read}

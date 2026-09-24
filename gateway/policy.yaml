@@ -1,0 +1,13 @@
+# Default gateway policy (M9): what agent tools may do unsupervised.
+# Referenced by gateway/tool_map.yaml; override per run with HYPERION_POLICY.
+default: allow
+rules:
+  # Big-ticket deals need a human before the money moves.
+  - match: {system: crm, operation: deals.create,
+            when: "amount_cents > 100000"}
+    effect: require_approval
+  # Sending email is irreversible: held even without this rule (the
+  # executor holds all irreversibles); the rule states the intent here
+  # so the audit trail names the policy, not just the effect class.
+  - match: {system: crm, operation: emails.send}
+    effect: require_approval

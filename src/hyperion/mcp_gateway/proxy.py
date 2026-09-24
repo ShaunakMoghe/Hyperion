@@ -7,11 +7,13 @@ policy. stdio framing is newline-delimited JSON-RPC (see ADR 003).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
 import sys
 import threading
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,7 @@ import yaml
 from hyperion.config import load as load_config
 from hyperion.executor import approvals
 from hyperion.executor import executor as ex
+from hyperion.executor import policy as policy_mod
 from hyperion.executor.clients import SystemClient
 from hyperion.ledger import db, store
 
@@ -31,6 +34,67 @@ def default_map_path() -> Path:
     if override:
         return Path(override)
     return REPO_ROOT / "gateway" / "tool_map.yaml"
+
+
+def resolve_policy_path(tool_map: dict) -> Path | None:
+    """Where the gateway's policy file lives (M9), if one is configured.
+
+    HYPERION_POLICY wins over the map's `policy:` key; relative paths
+    resolve against the repo root. Returns None when neither is set.
+    """
+    override = os.environ.get("HYPERION_POLICY")
+    raw = override if override else tool_map.get("policy")
+    if not raw:
+        return None
+    path = Path(raw)
+    return path if path.is_absolute() else REPO_ROOT / path
+
+
+def load_configured_policy(
+    tool_map: dict,
+) -> tuple[Path | None, dict | None, str | None, str | None]:
+    """Resolve, read once, and parse the gateway policy.
+
+    Returns (path, policy, sha256, error). (None, None, None, None) means
+    ungoverned. The file is read exactly once: the sha256 and the parsed
+    dict come from the same bytes, so enforcement can't drift from what
+    was validated and stamped. A configured-but-unloadable policy is an
+    error: the gateway refuses to start rather than run every call into
+    a deny (fail fast, fail closed).
+    """
+    path = resolve_policy_path(tool_map)
+    if path is None:
+        return None, None, None, None
+    try:
+        content = path.read_bytes()
+    except FileNotFoundError:
+        return None, None, None, f"policy {path} missing"
+    except OSError as e:
+        return None, None, None, f"policy {path} unreadable: {e}"
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError as e:
+        return None, None, None, f"policy {path} not valid UTF-8: {e}"
+    policy, error = policy_mod.loads_policy(text)
+    if error is not None:
+        return None, None, None, f"policy {path}: {error}"
+    return path, policy, hashlib.sha256(content).hexdigest(), None
+
+
+def check_resume_policy(conn, run_id: str, sha256: str) -> str | None:
+    """Refuse to resume a run stamped with a different policy (M9).
+
+    Returns an error string on mismatch, None when the run is unstamped
+    (pre-M9) or the stamp matches. Enforcement loads once at startup, so
+    resuming under a changed file would otherwise attest the wrong
+    governing policy in the audit export.
+    """
+    meta = store.get_run(conn, run_id).get("meta") or {}
+    stamped = meta.get("policy_sha256")
+    if stamped is None or stamped == sha256:
+        return None
+    return (f"run {run_id} was stamped with policy {stamped}, "
+            f"current policy is {sha256}; refusing to mix policies")
 
 
 def load_map(path: Path | None = None) -> dict:
@@ -68,26 +132,36 @@ def format_result(request_id: Any, result: dict) -> dict:
         return {"jsonrpc": "2.0", "id": request_id,
                 "result": {"content": [{"type": "text",
                                         "text": json.dumps(payload)}]}}
+    # The call_id is the client's receipt: every denied/failed call is a
+    # logged ledger row, and the audit export is keyed off that id (M9).
     text = json.dumps({"status": status,
+                       "call_id": result.get("call_id"),
                        "reason": result.get("reason", "")})
     return {"jsonrpc": "2.0", "id": request_id,
             "result": {"content": [{"type": "text", "text": text}],
                        "isError": True}}
 
 
-def format_denied(request_id: Any, reason: str) -> dict:
-    return {"jsonrpc": "2.0", "id": request_id,
-            "error": {"code": -32000, "message": f"hyperion denied: {reason}"}}
+def format_denied(request_id: Any, reason: str,
+                  call_id: str | None = None) -> dict:
+    error: dict[str, Any] = {"code": -32000,
+                             "message": f"hyperion denied: {reason}"}
+    if call_id is not None:
+        error["data"] = {"call_id": call_id}
+    return {"jsonrpc": "2.0", "id": request_id, "error": error}
 
 
 class Gateway:
     def __init__(self, tool_map: dict, conn, run_id: str,
-                 specs: dict, clients: dict[str, SystemClient]) -> None:
+                 specs: dict, clients: dict[str, SystemClient],
+                 policy: dict | None = None) -> None:
         self.map = tool_map
         self.conn = conn
         self.run_id = run_id
         self.specs = specs
         self.clients = clients
+        # Parsed once at startup: enforcement can't drift from the stamp.
+        self.policy = policy
         self._write_lock = threading.Lock()
         self._upstream: subprocess.Popen | None = None
 
@@ -118,10 +192,12 @@ class Gateway:
                 self.conn, self.run_id, "mcp", str(info["name"]), {},
                 specs=self.specs, clients=self.clients,
                 unknown=self.map.get("unknown", "deny"),
+                policy=self.policy,
             )
             if result["status"] == "held":
                 return format_result(request_id, result)
-            return format_denied(request_id, result.get("reason", "denied"))
+            return format_denied(request_id, result.get("reason", "denied"),
+                                 result.get("call_id"))
         mapping = self.map["tools"][info["name"]]
         args = dict(info["args"])
         depends_on = args.pop("depends_on", None)
@@ -130,6 +206,7 @@ class Gateway:
             args, specs=self.specs, clients=self.clients,
             unknown=self.map.get("unknown", "deny"),
             declared_deps=depends_on if isinstance(depends_on, list) else None,
+            policy=self.policy,
         )
         return format_result(request_id, result)
 
@@ -194,25 +271,44 @@ class Gateway:
 
 def main() -> int:
     tool_map = load_map()
+    _, policy, policy_sha, policy_error = load_configured_policy(tool_map)
+    if policy_error is not None:
+        print(f"gateway: {policy_error}", file=sys.stderr)
+        return 2
     cfg = load_config()
     conn = db.connect(cfg)
     db.migrate_up(conn)
     run_id = os.environ.get("HYPERION_RUN_ID")
     if run_id:
+        try:
+            uuid.UUID(run_id)
+        except ValueError:
+            print(f"gateway: HYPERION_RUN_ID {run_id} is not a uuid",
+                  file=sys.stderr)
+            return 2
         row = conn.execute("SELECT id FROM runs WHERE id = %s",
                            (run_id,)).fetchone()
         if row is None:
             print(f"gateway: HYPERION_RUN_ID {run_id} not found",
                   file=sys.stderr)
             return 2
+        if policy is not None:
+            assert policy_sha is not None
+            mismatch = check_resume_policy(conn, run_id, policy_sha)
+            if mismatch is not None:
+                print(f"gateway: {mismatch}", file=sys.stderr)
+                return 2
     else:
         run_id = store.create_run(
             conn, client=tool_map.get("session", {}).get("client", "mcp"))
+        if policy_sha is not None:
+            store.stamp_policy(conn, run_id, policy_sha)
     specs = ex.load_specs()
     crm_base = os.environ.get("CRM_BASE_URL", "http://127.0.0.1:8001")
     clients: dict[str, SystemClient] = {"crm": SystemClient(base_url=crm_base)}
     try:
-        return Gateway(tool_map, conn, run_id, specs, clients).run()
+        return Gateway(tool_map, conn, run_id, specs, clients,
+                       policy=policy).run()
     finally:
         clients["crm"].close()
         conn.close()

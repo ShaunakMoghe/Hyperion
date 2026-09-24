@@ -63,12 +63,17 @@ produce server-generated ids from `$.response`.
 
 ## Safety gates
 
-- **Policy** (`executor/policy.py`): YAML allow/deny/`require_approval`
-  rules with a fail-closed engine — missing file, bad rule, or unparsable
-  condition decides DENY. `when` conditions use a hand-walked AST subset,
-  never `eval`.
+- **Policy** (`executor/policy.py`, `docs/POLICY.md`): YAML
+  allow/deny/`require_approval` rules with a fail-closed engine — missing
+  file, bad rule, or unparsable condition decides DENY. `when` conditions
+  use a hand-walked AST subset, never `eval`. The gateway enforces its
+  policy file on every intercepted call and stamps the file's sha256 on
+  the run; a configured-but-unloadable policy stops the gateway at
+  startup instead of denying calls one by one.
 - **Approvals**: gated ops return `PENDING_APPROVAL` instead of executing;
-  bench scenarios run with `auto` or `deny` presets.
+  bench scenarios run with `auto` or `deny` presets. Humans list and
+  decide holds via `hyperion approvals` / `approve` / `deny`, and
+  `hyperion ledger export` emits the per-run audit artifact.
 - **Provenance** (`executor/provenance.py`): links produced values (e.g. a
   created id) to later calls that consume them, scalar-only, so shared or
   merged values never create false links.

@@ -10,6 +10,7 @@ import json
 import uuid
 
 import psycopg
+import psycopg.rows
 
 from hyperion.ledger import store
 
@@ -41,6 +42,7 @@ def hold_call(
         spec_id=spec_id,
         spec_hash=spec_hash,
         idempotency_key=f"hold:{run_id}:{operation}:{_args_key(args)}",
+        decision_reason=reason,
     )
     existing = conn.execute(
         "SELECT id FROM approvals WHERE call_id = %s", (str(call["id"]),)
@@ -60,6 +62,54 @@ def hold_call(
 
 def _args_key(args: dict) -> str:
     return json.dumps(args, sort_keys=True, separators=(",", ":"))
+
+
+def list_pending(
+    conn: psycopg.Connection, run_id: str | None = None
+) -> list[dict]:
+    """Held calls awaiting a decision, oldest first (M9).
+
+    Run-scoped when run_id is given, global otherwise. Each entry carries
+    what a human needs to decide: who called what with which args, and why
+    the call was held.
+    """
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        if run_id is None:
+            rows = conn.execute(
+                """SELECT c.id, c.run_id, c.seq, c.system, c.operation,
+                          c.args, c.effect_class, c.decision_reason,
+                          c.started_at
+                   FROM calls c JOIN approvals a ON a.call_id = c.id
+                   WHERE a.status = 'pending'
+                   ORDER BY c.started_at, c.seq"""
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT c.id, c.run_id, c.seq, c.system, c.operation,
+                          c.args, c.effect_class, c.decision_reason,
+                          c.started_at
+                   FROM calls c JOIN approvals a ON a.call_id = c.id
+                   WHERE a.status = 'pending' AND c.run_id = %s
+                   ORDER BY c.seq""",
+                (run_id,),
+            ).fetchall()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    return [
+        {
+            "call_id": str(r["id"]),
+            "run_id": str(r["run_id"]),
+            "seq": r["seq"],
+            "system": r["system"],
+            "operation": r["operation"],
+            "args": r["args"],
+            "effect_class": r["effect_class"],
+            "reason": r["decision_reason"],
+            "held_at": r["started_at"].isoformat(),
+        }
+        for r in (dict(r) for r in rows)
+    ]
 
 
 def decide(

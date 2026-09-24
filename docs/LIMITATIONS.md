@@ -51,6 +51,14 @@ to change. If you're evaluating this project, read this file second
 - **Gateway maps one upstream.** The MCP proxy fronts a single demo
   server via `tool_map.yaml`; multi-server fan-out and streaming tools are
   out of scope.
+- **Deny/hold reasons aren't hashed.** `decision_reason` is stored on the
+  call row but excluded from the hash chain (like `status`), so tampering
+  with it is not detected by `ledger verify`. It shows up in the audit
+  export as recorded, not as proven.
+- **Policy is per-tool and per-run.** There is no per-user/per-principal
+  scoping, and a run's governing policy is fixed at creation — editing
+  the file mid-run changes nothing until the next run. Both are
+  deliberate (see `docs/POLICY.md`), not oversights.
 
 ## Benchmark
 

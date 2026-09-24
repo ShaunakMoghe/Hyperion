@@ -120,14 +120,7 @@ def validate_policy(policy) -> str | None:
     return None
 
 
-def load_policy(path: str | Path) -> tuple[dict | None, str | None]:
-    """Load a policy file. Returns (policy, error); error set fails closed."""
-    try:
-        raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return None, f"policy file {path} missing"
-    except (OSError, yaml.YAMLError) as e:
-        return None, f"policy file {path} unparsable: {e}"
+def _finish(raw) -> tuple[dict | None, str | None]:
     if not isinstance(raw, dict):
         return None, "policy root must be a mapping"
     error = validate_policy(raw)
@@ -135,6 +128,34 @@ def load_policy(path: str | Path) -> tuple[dict | None, str | None]:
         return None, error
     return {"default": raw.get("default", ALLOW),
             "rules": raw.get("rules", [])}, None
+
+
+def loads_policy(text: str) -> tuple[dict | None, str | None]:
+    """Parse policy YAML text. Returns (policy, error); error fails closed.
+
+    Lets callers hash and parse the exact bytes they read (no TOCTOU
+    between a validation read and a later enforcement read).
+    """
+    try:
+        raw = yaml.safe_load(text)
+    except yaml.YAMLError as e:
+        return None, f"unparsable: {e}"
+    return _finish(raw)
+
+
+def load_policy(path: str | Path) -> tuple[dict | None, str | None]:
+    """Load a policy file. Returns (policy, error); error set fails closed."""
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None, f"policy file {path} missing"
+    except (OSError, UnicodeDecodeError) as e:
+        return None, f"policy file {path} unreadable: {e}"
+    try:
+        raw = yaml.safe_load(text)
+    except yaml.YAMLError as e:
+        return None, f"policy file {path} unparsable: {e}"
+    return _finish(raw)
 
 
 def decide(policy: dict, system: str, operation: str, args: dict) -> tuple[str, str]:

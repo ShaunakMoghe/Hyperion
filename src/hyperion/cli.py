@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+import uuid
+from pathlib import Path
 
 from hyperion.config import load as load_config
 from hyperion.executor import approvals, rollback_exec, rollback_plan
 from hyperion.executor import executor as ex
 from hyperion.executor.clients import SystemClient
 from hyperion.ledger import db, store
+from hyperion.ledger import export as audit_export
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -21,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
     ledger_sub = ledger.add_subparsers(dest="ledger_cmd")
     verify = ledger_sub.add_parser("verify", help="verify a run ledger chain")
     verify.add_argument("run", help="run id to verify")
+    export = ledger_sub.add_parser("export", help="export a run audit artifact")
+    export.add_argument("--run", required=True, help="run id to export")
+    export.add_argument("--out", default=None,
+                        help="write JSON here instead of stdout")
 
     rb = sub.add_parser("rollback", help="rollback commands")
     rb_sub = rb.add_subparsers(dest="rb_cmd")
@@ -45,6 +53,10 @@ def build_parser() -> argparse.ArgumentParser:
     deny = sub.add_parser("deny", help="deny a held call")
     deny.add_argument("call_id")
     deny.add_argument("--by", default="")
+    pending = sub.add_parser("approvals",
+                             help="list held calls awaiting a decision")
+    pending.add_argument("--run", default=None,
+                         help="only this run id (default: all runs)")
     return p
 
 
@@ -53,6 +65,16 @@ def _clients() -> dict[str, SystemClient]:
 
     base = os.environ.get("CRM_BASE_URL", "http://127.0.0.1:8001")
     return {"crm": SystemClient(base_url=base)}
+
+
+def _valid_uuid(value: str | None) -> bool:
+    if value is None:
+        return True
+    try:
+        uuid.UUID(value)
+    except ValueError:
+        return False
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -68,9 +90,29 @@ def main(argv: list[str] | None = None) -> int:
     db.migrate_up(conn)
     try:
         if args.cmd == "ledger" and args.ledger_cmd == "verify":
+            if not _valid_uuid(args.run):
+                print(f"hyperion: {args.run!r} is not a run id",
+                      file=sys.stderr)
+                return 1
             result = store.verify_chain(conn, args.run)
             print(json.dumps(result, indent=2))
             return 0 if result["ok"] else 1
+        if args.cmd == "ledger" and args.ledger_cmd == "export":
+            if not _valid_uuid(args.run):
+                print(f"hyperion: {args.run!r} is not a run id",
+                      file=sys.stderr)
+                return 1
+            try:
+                artifact = audit_export.export_run(conn, args.run)
+            except KeyError as e:
+                print(f"hyperion: {e}", file=sys.stderr)
+                return 1
+            text = json.dumps(artifact, indent=2, default=str)
+            if args.out:
+                Path(args.out).write_text(text, encoding="utf-8")
+            else:
+                print(text)
+            return 0 if artifact["chain"]["ok"] else 1
         if args.cmd == "rollback" and args.rb_cmd == "plan":
             the_plan = rollback_plan.plan(conn, args.run, args.target,
                                           mode=args.mode, force=args.force)
@@ -108,6 +150,14 @@ def main(argv: list[str] | None = None) -> int:
             out = approvals.decide(conn, args.call_id, False, args.by)
             print(json.dumps(out, indent=2, default=str))
             return 0 if out["status"] == "denied" else 1
+        if args.cmd == "approvals":
+            if not _valid_uuid(args.run):
+                print(f"hyperion: {args.run!r} is not a run id",
+                      file=sys.stderr)
+                return 1
+            pending = approvals.list_pending(conn, args.run)
+            print(json.dumps(pending, indent=2, default=str))
+            return 0
     finally:
         conn.close()
     build_parser().print_help()

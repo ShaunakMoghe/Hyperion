@@ -40,6 +40,30 @@ def create_run(
     return run_id
 
 
+def get_run(conn: psycopg.Connection, run_id: str) -> dict:
+    conn.row_factory = psycopg.rows.dict_row
+    try:
+        row = conn.execute("SELECT * FROM runs WHERE id = %s", (run_id,)).fetchone()
+    finally:
+        conn.row_factory = psycopg.rows.tuple_row
+    if row is None:
+        raise KeyError(f"run {run_id} not found")
+    return dict(row)
+
+
+def stamp_policy(conn: psycopg.Connection, run_id: str, policy_sha256: str) -> None:
+    """Record the governing policy's sha256 in the run's meta (M9).
+
+    Called once at run creation by policy-enforcing entry points; the run's
+    governing policy is fixed at creation so an audit export can say what
+    rules were in force.
+    """
+    conn.execute(
+        "UPDATE runs SET meta = meta || %s::jsonb WHERE id = %s",
+        (json.dumps({"policy_sha256": policy_sha256}), run_id),
+    )
+
+
 def _last_hash(conn: psycopg.Connection, run_id: str) -> str:
     row = conn.execute(
         "SELECT entry_hash FROM calls WHERE run_id = %s ORDER BY seq DESC LIMIT 1",
@@ -71,6 +95,7 @@ def append_call(
     spec_id: str | None = None,
     spec_hash: str | None = None,
     idempotency_key: str | None = None,
+    decision_reason: str | None = None,
 ) -> dict:
     """Append a call; returns the row. Existing idempotency_key returns the
     original row without writing a duplicate (exactly-once support)."""
@@ -107,9 +132,9 @@ def append_call(
                               effect_class, fidelity_expected, status,
                               before_image, response, post_image, spec_id,
                               spec_hash, idempotency_key, started_at,
-                              prev_hash, entry_hash)
+                              prev_hash, entry_hash, decision_reason)
            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                   %s, %s, %s, %s, %s, %s, %s, %s)""",
+                   %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
             call_id,
             run_id,
@@ -129,6 +154,7 @@ def append_call(
             started,
             prev_hash,
             entry_hash,
+            decision_reason,
         ),
     )
     return get_call(conn, call_id)
@@ -175,6 +201,7 @@ def get_call(conn: psycopg.Connection, call_id: str) -> dict:
 
 
 def _payload_of(row: dict) -> dict:
+    # decision_reason is executor state like status: stored, never hashed.
     return {
         "id": str(row["id"]),
         "run_id": str(row["run_id"]),
@@ -199,8 +226,9 @@ def _payload_of(row: dict) -> dict:
 def verify_chain(conn: psycopg.Connection, run_id: str) -> dict:
     """Recompute the chain; report the first broken entry, if any.
 
-    Mutable executor state (status, finished_at) is excluded from the hash
-    by design; tampering with those fields is NOT detected (limitation)."""
+    Mutable executor state (status, finished_at, decision_reason) is
+    excluded from the hash by design; tampering with those fields is NOT
+    detected (limitation)."""
     conn.row_factory = psycopg.rows.dict_row
     try:
         rows = conn.execute(
