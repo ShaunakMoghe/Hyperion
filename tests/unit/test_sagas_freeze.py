@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import yaml
-
 from bench.freeze_sagas import validate_sagas
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
