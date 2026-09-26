@@ -19,7 +19,7 @@ dependencies = [
 dev = [
   "pytest>=8",
   "pytest-asyncio>=0.23",
-  "ruff>=0.4",
+  "ruff==0.16.9",
   "poethepoet>=0.28",
   "uvicorn>=0.30", # in-process CRM server for integration/e2e tests
 ]
