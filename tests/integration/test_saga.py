@@ -142,6 +142,22 @@ def test_saga_partial_when_irreversible_survives(env):
         out["steps"][0]["call_id"]: "skipped_irreversible"}
 
 
+def test_saga_refs_approved_irreversible_produced(env):
+    conn, run_id, specs, clients = _saga_env(env)
+    out = saga.run_saga(conn, run_id, [
+        {"system": "crm", "operation": "emails.send",
+         "args": {"to": f"saga-{uuid.uuid4().hex[:8]}@example.com",
+                 "subject": "S", "body": "B"}},
+        {"system": "crm", "operation": "emails.send",
+         "args": {"to": f"saga-{uuid.uuid4().hex[:8]}@example.com",
+                 "subject": "S2", "body": {"$ref": [0, "email_id"]}}},
+    ], specs=specs, clients=clients, approve_held="auto")
+    assert out["status"] == "completed"
+    first_id = out["steps"][0]["produced"]["email_id"]
+    row = store.get_call(conn, out["steps"][1]["call_id"])
+    assert row["args"]["body"] == first_id
+
+
 def test_stamp_saga_records_summary(env):
     conn, run_id = env["conn"], env["run_id"]
     store.stamp_saga(conn, run_id, {"id": "sag-x", "status": "completed"})

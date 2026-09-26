@@ -1,0 +1,317 @@
+[
+  {
+    "id": "sag-01",
+    "run_id": "6c7b4084-1eb2-4dcc-9831-175ef05fb03c",
+    "steps": [
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "513c32d9-f1bc-43de-98cf-fcdeb3f40d62"
+      },
+      {
+        "op": "customers.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "0ae453b7-10a1-491b-b3a8-892d8d5bad05"
+      },
+      {
+        "op": "deals.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "2e291b6a-a6df-4855-8238-309f1bda1784"
+      },
+      {
+        "op": "payment_intents.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "59cc4e6b-022d-46b4-b572-fe2713a3764a"
+      },
+      {
+        "op": "notes.add",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "82fd6fe2-8f6a-4a36-9165-74fe26afe1d8"
+      }
+    ],
+    "problems": [],
+    "saga_status": "completed",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "82fd6fe2-8f6a-4a36-9165-74fe26afe1d8": "restored_exact",
+        "59cc4e6b-022d-46b4-b572-fe2713a3764a": "restored_equivalent",
+        "2e291b6a-a6df-4855-8238-309f1bda1784": "restored_equivalent",
+        "0ae453b7-10a1-491b-b3a8-892d8d5bad05": "restored_equivalent",
+        "513c32d9-f1bc-43de-98cf-fcdeb3f40d62": "restored_equivalent"
+      },
+      "force": false
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": []
+    },
+    "stripe_residual": {
+      "checked": [
+        "customer:cus_VKSnvKKzXY8Ppj:200",
+        "pi:pi_3UJnrlKIQE5bXjCN1xAdotZD:canceled"
+      ],
+      "live": []
+    },
+    "pass": true
+  },
+  {
+    "id": "sag-02",
+    "run_id": "2d4dfb82-6721-4205-9a80-06015cc67c1a",
+    "steps": [
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "4a74391d-5eed-4678-b917-a16ea2907835"
+      },
+      {
+        "op": "customers.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "13c24b66-2a77-499c-b8fe-070c7f572281"
+      },
+      {
+        "op": "payment_intents.create",
+        "first": "failed",
+        "want": "failed",
+        "final": "failed"
+      }
+    ],
+    "problems": [],
+    "saga_status": "compensated",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "13c24b66-2a77-499c-b8fe-070c7f572281": "restored_equivalent",
+        "4a74391d-5eed-4678-b917-a16ea2907835": "restored_equivalent"
+      },
+      "force": "compensation"
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": []
+    },
+    "stripe_residual": {
+      "checked": [
+        "customer:cus_VKSnre2RdINpQe:200"
+      ],
+      "live": []
+    },
+    "pass": true
+  },
+  {
+    "id": "sag-03",
+    "run_id": "267ae931-a70c-4fb6-9120-0258cdc31c22",
+    "steps": [
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "9197c409-142c-403b-829f-e360190044cc"
+      },
+      {
+        "op": "products.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "6428099a-e007-41ce-9bd5-7bed9592cd12"
+      },
+      {
+        "op": "coupons.create",
+        "first": "denied",
+        "want": "denied",
+        "final": "denied"
+      }
+    ],
+    "problems": [],
+    "saga_status": "compensated",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "6428099a-e007-41ce-9bd5-7bed9592cd12": "restored_exact",
+        "9197c409-142c-403b-829f-e360190044cc": "restored_equivalent"
+      },
+      "force": "compensation"
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": []
+    },
+    "stripe_residual": {
+      "checked": [
+        "product:prod_VKSnDYUmY809R5:404"
+      ],
+      "live": []
+    },
+    "pass": true
+  },
+  {
+    "id": "sag-04",
+    "run_id": "59cb100d-c363-44fb-abb6-edee87321216",
+    "steps": [
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "cbe9290d-ca83-46fa-a2be-7ffb827ce6fb"
+      },
+      {
+        "op": "deals.create",
+        "first": "held",
+        "want": "held",
+        "final": "executed",
+        "call_id": "236405fe-bcd0-4c25-bd4f-214a2074dfbb"
+      },
+      {
+        "op": "customers.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "afdbfd7b-dac8-43ef-9476-02f4a65e035e"
+      },
+      {
+        "op": "notes.add",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "4ffdf620-0c2e-4a29-bb0c-fd7e7e961a08"
+      }
+    ],
+    "problems": [],
+    "saga_status": "completed",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "4ffdf620-0c2e-4a29-bb0c-fd7e7e961a08": "restored_exact",
+        "afdbfd7b-dac8-43ef-9476-02f4a65e035e": "restored_equivalent",
+        "236405fe-bcd0-4c25-bd4f-214a2074dfbb": "restored_equivalent",
+        "cbe9290d-ca83-46fa-a2be-7ffb827ce6fb": "restored_equivalent"
+      },
+      "force": false
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": []
+    },
+    "stripe_residual": {
+      "checked": [
+        "customer:cus_VKSnkyC4LzqH0w:200"
+      ],
+      "live": []
+    },
+    "pass": true
+  },
+  {
+    "id": "sag-05",
+    "run_id": "4e32735a-2ee8-4698-ac4f-e68761e81d8b",
+    "steps": [
+      {
+        "op": "emails.send",
+        "first": "held",
+        "want": "held",
+        "final": "executed",
+        "call_id": "e4af7aad-009a-40f1-9068-88884e9a2a08"
+      },
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "0e3853af-3412-4ea6-b019-81a1f1699ce7"
+      },
+      {
+        "op": "payment_intents.create",
+        "first": "failed",
+        "want": "failed",
+        "final": "failed"
+      }
+    ],
+    "problems": [],
+    "saga_status": "partial",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "0e3853af-3412-4ea6-b019-81a1f1699ce7": "restored_equivalent",
+        "e4af7aad-009a-40f1-9068-88884e9a2a08": "skipped_irreversible"
+      },
+      "force": "compensation"
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": [
+        "01bd8175-b9af-49ce-821c-2dcd72649c3c"
+      ]
+    },
+    "stripe_residual": {
+      "checked": [],
+      "live": []
+    },
+    "pass": true
+  },
+  {
+    "id": "sag-06",
+    "run_id": "456843bd-ff6a-4826-9424-51a9fd2a3803",
+    "steps": [
+      {
+        "op": "leads.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "46e55fea-25d2-4d71-9ed1-8cdfa1718e52"
+      },
+      {
+        "op": "deals.create",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "de949b39-21f1-432a-b058-7a10ca9cfde7"
+      },
+      {
+        "op": "notes.add",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "3275d254-883d-48b9-ae9f-f99074008c21"
+      },
+      {
+        "op": "leads.update",
+        "first": "executed",
+        "want": "executed",
+        "final": "executed",
+        "call_id": "a4f114a9-d37f-483e-9fb5-9a86d8c24fb1"
+      }
+    ],
+    "problems": [],
+    "saga_status": "completed",
+    "rollback": {
+      "status": "completed",
+      "outcomes": {
+        "a4f114a9-d37f-483e-9fb5-9a86d8c24fb1": "restored_exact",
+        "3275d254-883d-48b9-ae9f-f99074008c21": "restored_exact",
+        "de949b39-21f1-432a-b058-7a10ca9cfde7": "restored_equivalent",
+        "46e55fea-25d2-4d71-9ed1-8cdfa1718e52": "restored_equivalent"
+      },
+      "force": false
+    },
+    "crm_residual": {
+      "live_leftovers": [],
+      "emails_added": []
+    },
+    "pass": true
+  }
+]

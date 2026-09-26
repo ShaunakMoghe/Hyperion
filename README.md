@@ -37,7 +37,7 @@ What exists today:
   live execution graph over SSE, approvals queue, one-click rollback,
   audit export (`docs/DEMO.md`)
 
-Test suite: 178 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
+Test suite: 199 passed, 1 xfailed (`pytest tests -q`; Stripe/LLM tests
 self-skip without keys).
 
 ## Quickstart
@@ -64,9 +64,12 @@ For the full picture, start with `docs/ARCHITECTURE.md`. For the
 The bench-v1 scenario set (40 tasks: 20 mini-CRM, 20 Stripe, frozen at
 the `bench-v1` tag with hashes in `bench/scenarios/v1.freeze.json`)
 passes 40/40 with zero residual damage; the synthesis track grades
-8/9 hold-out specs by live execution. Raw runs live in
-`bench/baselines/`, the writeup (including the failure taxonomy) in
-`docs/RESULTS.md`. Nothing is claimed without a number there.
+8/9 hold-out specs by live execution. The sagas-v1 set (6 cross-system
+sagas, frozen at the `sagas-v1` tag) passes 6/6 with zero unexpected
+residue (sag-05's surviving email is the asserted `partial` outcome).
+Raw runs live in `bench/baselines/`, the writeups in
+`docs/RESULTS.md` and `docs/SAGAS.md`. Nothing is claimed without a
+number there.
 
 ## Prior art
 

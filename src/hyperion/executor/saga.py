@@ -7,10 +7,11 @@ Held steps pause the saga for a human unless approve_held="auto".
 
 Saga status:
 - completed: every step executed. Nothing was compensated.
-- compensated: aborted, and every completed step restored or payed back.
+- compensated: aborted, and every completed step restored or paid back.
 - partial: aborted, compensation ran but something is left behind
-  (irreversible effects, conflicts, errors).
-- failed: aborted and compensation itself could not run.
+  (an irreversible effect or a conflict).
+- failed: aborted and compensation itself could not run (including any
+  per-step error outcome, which fails the rollback).
 - awaiting_approval: paused on a held step (approve_held unset).
 
 Step args may carry {"$ref": [step_index, produced_name]} leaves, resolved
@@ -43,6 +44,23 @@ def resolve_refs(value, produced_by_index: list[dict]):
     if isinstance(value, list):
         return [resolve_refs(v, produced_by_index) for v in value]
     return value
+
+
+def _produced_of(spec: dict, response: dict | None) -> dict:
+    """Recompute produced ids from a response (approved irreversibles).
+
+    Mirrors bench/run.py: the approve path returns the raw response but no
+    produced map, so derive it from the spec's produces clauses.
+    """
+    out: dict = {}
+    if not isinstance(response, dict):
+        return out
+    for p in spec.get("produces", []):
+        try:
+            out[p["name"]] = ex.lookup({"response": response}, p["from"][2:])
+        except KeyError:
+            continue
+    return out
 
 
 def run_saga(
@@ -78,6 +96,8 @@ def run_saga(
                                          specs, clients or {})
         spec = specs.get(f"{step['system']}.{step['operation']}", {})
         produced = out.get("produced") or {}
+        if not produced and out["status"] == "executed":
+            produced = _produced_of(spec, out.get("response"))
         record = {"call_id": out.get("call_id"), "first": first,
                   "status": out["status"], "produced": produced,
                   "effect_class": spec.get("effect_class", "unknown")}
