@@ -1,0 +1,13 @@
+{
+  "bench": "sagas-v1",
+  "files": {
+    "bench/scenarios/sagas.yaml": "2c798d3b336d2762e550f79c315f169c0da6ecf1e58635fc9cb76222b7d3adee",
+    "bench/run_sagas.py": "45735f53f08b0eab0d1626558281bd5a4cc5a6a5f0d346d75da372c6cf7f0696",
+    "studies/stripe/SPEC_VERSION": "03d0dad081665366f05aa325a1a6ca89e677e48f8fce3e3bb32d61030966ea13",
+    "targets/crm/migrations/001_crm.up.sql": "e0516ae606134b1cf4e6dbda04eff8dce7b28e0c9bbadf7634a8d4f7d967f763",
+    "specs/*/*.yaml": "5a928507064add4b78a29f6a244dc235e84f01d282d05deddbb6036945528463"
+  },
+  "spec_files": 19,
+  "sagas": 6,
+  "git_commit": "630bfccaf64975065641ca494d3f1d93cf65e647"
+}

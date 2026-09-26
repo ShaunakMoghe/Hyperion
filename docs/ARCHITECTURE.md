@@ -60,7 +60,9 @@ produce server-generated ids from `$.response`.
 4. **Execute + roll back.** The executor runs agent plans through the
    ledger: each call is policy-checked, executed, verified, and appended
    to a rollback plan. Rollback replays inverses in reverse; anything left
-   is measured damage.
+   is measured damage. Multi-step cross-system scripts run as sagas
+   (`executor/saga.py`, `docs/SAGAS.md`): first failure aborts and
+   compensates what completed.
 
 ## Safety gates
 

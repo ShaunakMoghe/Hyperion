@@ -169,6 +169,17 @@ def stamp_policy(conn: psycopg.Connection, run_id: str, policy_sha256: str) -> N
     )
 
 
+def stamp_saga(conn: psycopg.Connection, run_id: str, saga: dict) -> None:
+    """Record a saga's summary ({id, status, ...}) in the run's meta (M11).
+
+    Called once per saga by the saga entry point after the saga settles.
+    """
+    conn.execute(
+        "UPDATE runs SET meta = meta || %s::jsonb WHERE id = %s",
+        (json.dumps({"saga": saga}), run_id),
+    )
+
+
 def _last_hash(conn: psycopg.Connection, run_id: str) -> str:
     row = conn.execute(
         "SELECT entry_hash FROM calls WHERE run_id = %s ORDER BY seq DESC LIMIT 1",

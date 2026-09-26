@@ -1,0 +1,173 @@
+# Cross-system saga scenarios (M11): ordered steps that span systems.
+# Each saga runs through executor/saga.py: first failed/denied step aborts
+# and compensates every completed step. Completed sagas are rolled back
+# wholesale afterwards (like bench-v1) and measured for residue.
+#
+# Conventions mirror bench/scenarios/v1.yaml: per-step `expect`, optional
+# `rollback` outcome override (else derived from effect/fidelity),
+# `approve: true` on held steps when approvals is auto, $refs as
+# [step_index, produced_name]. Unlike v1, every step names its system.
+sagas:
+  - id: sag-01
+    description: Lead to cash, happy path across CRM and Stripe.
+    approvals: auto
+    policy: null
+    expect_saga: completed
+    expect_rollback: clean
+    steps:
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-01", email: "saga-sag-01@example.com"}
+      - system: stripe
+        op: customers.create
+        args: {name: "Saga Customer sag-01",
+               email: "saga-sag-01@example.com"}
+      - system: crm
+        op: deals.create
+        args:
+          lead_id: {$ref: [0, lead_id]}
+          title: "Deal sag-01"
+          amount_cents: 5000
+      - system: stripe
+        op: payment_intents.create
+        args:
+          amount: 5000
+          currency: usd
+          customer: {$ref: [1, customer_id]}
+          automatic_payment_methods: {enabled: true, allow_redirects: never}
+      - system: crm
+        op: notes.add
+        args:
+          deal_id: {$ref: [2, deal_id]}
+          body: "Payment opened for sag-01"
+
+  - id: sag-02
+    description: Bad payment currency aborts; customer and lead unwind.
+    approvals: auto
+    policy: null
+    expect_saga: compensated
+    expect_rollback: compensated
+    steps:
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-02", email: "saga-sag-02@example.com"}
+      - system: stripe
+        op: customers.create
+        args: {name: "Saga Customer sag-02",
+               email: "saga-sag-02@example.com"}
+      - system: stripe
+        op: payment_intents.create
+        args:
+          amount: 5000
+          currency: xxx
+          customer: {$ref: [1, customer_id]}
+          automatic_payment_methods: {enabled: true, allow_redirects: never}
+        expect: failed
+
+  - id: sag-03
+    description: Denied coupon aborts; product and lead unwind.
+    approvals: auto
+    policy:
+      default: allow
+      rules:
+        - match: {system: stripe, operation: coupons.create}
+          effect: deny
+    expect_saga: compensated
+    expect_rollback: compensated
+    steps:
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-03"}
+      - system: stripe
+        op: products.create
+        args: {name: "Saga Widget sag-03"}
+      - system: stripe
+        op: coupons.create
+        args: {percent_off: 10, duration: once}
+        expect: denied
+
+  - id: sag-04
+    description: Big-ticket deal pauses for approval, auto-approved, completes.
+    approvals: auto
+    policy:
+      default: allow
+      rules:
+        - match: {system: crm, operation: deals.create,
+                  when: "amount_cents > 100000"}
+          effect: require_approval
+    expect_saga: completed
+    expect_rollback: clean
+    steps:
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-04", email: "saga-sag-04@example.com"}
+      - system: crm
+        op: deals.create
+        args:
+          lead_id: {$ref: [0, lead_id]}
+          title: "Enterprise sag-04"
+          amount_cents: 250000
+        expect: held
+        approve: true
+        final: executed
+      - system: stripe
+        op: customers.create
+        args: {name: "Saga Customer sag-04",
+               email: "saga-sag-04@example.com"}
+      - system: crm
+        op: notes.add
+        args:
+          deal_id: {$ref: [1, deal_id]}
+          body: "Customer linked for sag-04"
+
+  - id: sag-05
+    description: Sent email survives the abort; saga is partial, not clean.
+    approvals: auto
+    policy: null
+    expect_saga: partial
+    expect_rollback: partial
+    steps:
+      - system: crm
+        op: emails.send
+        args: {to: "saga-sag-05@example.com", subject: "Kickoff",
+               body: "Saga sag-05 started."}
+        expect: held
+        approve: true
+        final: executed
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-05"}
+      - system: stripe
+        op: payment_intents.create
+        args:
+          amount: 5000
+          currency: xxx
+          automatic_payment_methods: {enabled: true, allow_redirects: never}
+        expect: failed
+
+  - id: sag-06
+    description: CRM-only chain; runs offline and in CI.
+    approvals: auto
+    policy: null
+    expect_saga: completed
+    expect_rollback: clean
+    steps:
+      - system: crm
+        op: leads.create
+        args: {name: "Saga Lead sag-06"}
+      - system: crm
+        op: deals.create
+        args:
+          lead_id: {$ref: [0, lead_id]}
+          title: "Local sag-06"
+          amount_cents: 100
+      - system: crm
+        op: notes.add
+        args:
+          deal_id: {$ref: [1, deal_id]}
+          body: "Offline saga note"
+      - system: crm
+        op: leads.update
+        args:
+          lead_id: {$ref: [0, lead_id]}
+          name: "Saga Lead sag-06 (won)"
